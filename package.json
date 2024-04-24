@@ -17,8 +17,8 @@
   },
   "license": "ISC",
   "author": "Laurence Hartgill",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "typings": "./dist/index.d.ts",
   "files": [
     "dist/"
