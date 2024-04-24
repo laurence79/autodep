@@ -31,3 +31,4 @@ jobs:
         uses: cycjimmy/semantic-release-action@v3.4.2
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
