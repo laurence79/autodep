@@ -1,3 +1,10 @@
+# [1.0.0-beta.4](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2024-04-24)
+
+
+### Features
+
+* Provide container as injected dependency ([6e6da39](https://github.com/laurence79/ts-ioc/commit/6e6da3928786bb5cb70c9c1be872ed91b861d83c))
+
 # [1.0.0-beta.3](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2024-04-24)
 
 
