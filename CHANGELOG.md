@@ -1,3 +1,10 @@
+# [1.0.0-beta.2](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2024-04-24)
+
+
+### Bug Fixes
+
+* Release asset names should be unique ([d769e82](https://github.com/laurence79/ts-ioc/commit/d769e829d5179dfbbfe7e8c8e2017c88b158bcc6))
+
 # 1.0.0-beta.1 (2024-04-24)
 
 
