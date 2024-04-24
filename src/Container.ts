@@ -7,13 +7,8 @@ import { RegistrationOptions } from './types/RegistrationOptions';
 import { Constructor } from './types/Constructor';
 import { Registry } from './types/Registry';
 import { Resolver } from './types/Resolver';
-import InternalContainer from './InternalContainer';
 
 abstract class Container implements Registry, Resolver {
-  public static create(): Container {
-    return new InternalContainer();
-  }
-
   public abstract createChildContainer(): Container;
 
   public abstract register<T>(

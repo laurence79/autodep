@@ -14,11 +14,12 @@ import { Scope } from './Scope';
 import { Constructor } from './types/Constructor';
 import isConstructor from './helpers/isConstructor';
 import { InternalResolver } from './types/InternalResolver';
-import { Resolver } from './types/Resolver';
-import { Registry } from './types/Registry';
+import Container from './Container';
 
-class InternalContainer implements Registry, Resolver, InternalResolver {
+class InternalContainer extends Container implements InternalResolver {
   constructor(public readonly parent?: InternalContainer) {
+    super();
+    this.registerAlias(Container, InternalContainer);
     this.registerSingleton(InternalContainer, this);
   }
 

@@ -1,4 +1,5 @@
 import Container from './Container';
+import createContainer from './createContainer';
 import injectable from './decorators/injectable';
 import isConstructor from './helpers/isConstructor';
 import { Scope } from './Scope';
@@ -6,7 +7,7 @@ import { Scope } from './Scope';
 it('returns registered instances', () => {
   class A {}
 
-  const container = Container.create();
+  const container = createContainer();
   const instance = new A();
 
   container.registerSingleton(A, instance);
@@ -19,7 +20,7 @@ it('returns registered instances', () => {
 it('constructs unregistered types if they have no params', () => {
   class A {}
 
-  const container = Container.create();
+  const container = createContainer();
 
   const instance = container.resolve(A);
 
@@ -34,7 +35,7 @@ it('creates instances with dependencies', () => {
     constructor(public b: B) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
 
   const instance = container.resolve(A);
 
@@ -47,7 +48,7 @@ it('throws an error if unregistered type has params', () => {
     constructor(public b: string) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
 
   expect(() => container.resolve(A)).toThrow('Unable to construct "A"');
 });
@@ -60,7 +61,7 @@ it('uses registered instances when resolving dependencies', () => {
     constructor(public b: B) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
   const instance = new B();
   container.registerSingleton(B, instance);
 
@@ -70,7 +71,7 @@ it('uses registered instances when resolving dependencies', () => {
 it('singletons resolve to the same instance each time', () => {
   class A {}
 
-  const container = Container.create();
+  const container = createContainer();
   container.registerSingleton(A);
 
   const one = container.resolve(A);
@@ -82,7 +83,7 @@ it('singletons resolve to the same instance each time', () => {
 it("defers to the parent container if type can't be resolved locally", () => {
   class A {}
 
-  const container = Container.create();
+  const container = createContainer();
   const instance = new A();
   container.registerSingleton(A, instance);
 
@@ -95,7 +96,7 @@ it('handles registering an extended type to be resolved in place of a superclass
   class A {}
   class B extends A {}
 
-  const container = Container.create();
+  const container = createContainer();
   container.registerAlias(A, B);
 
   const instance = container.resolve(A);
@@ -106,7 +107,7 @@ it('handles registering an extended type to be resolved in place of a abstract b
   abstract class A {}
   class B extends A {}
 
-  const container = Container.create();
+  const container = createContainer();
   container.registerAlias(A, B);
 
   const instance = container.resolve(A);
@@ -118,7 +119,7 @@ it('handles registering a factory', () => {
     constructor(public greeting: string) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
   container.registerFactory(A, () => new A('hello'));
 
   const instance = container.resolve(A);
@@ -135,7 +136,7 @@ it('factory can use resolution chain', () => {
     constructor(public logger: Logger) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
   container.registerFactory(Logger, (_, chain) => {
     const receivingToken = chain.at(1);
     const name =
@@ -162,7 +163,7 @@ it('Resolution scoped registration resolves multiple dependencies of the same ty
     constructor(public a: A, public b: B) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
   container.register(A, { scope: Scope.resolution });
 
   const instance = container.resolve(C);
@@ -183,10 +184,22 @@ it('Transient scoped registration resolves multiple dependencies of the same typ
     constructor(public a: A, public b: B) {}
   }
 
-  const container = Container.create();
+  const container = createContainer();
   container.register(A, { scope: Scope.transient });
 
   const instance = container.resolve(C);
 
   expect(instance.a).not.toBe(instance.b.a);
+});
+
+it('can inject the container', () => {
+  @injectable()
+  class A {
+    constructor(public container: Container) {}
+  }
+
+  const container = createContainer();
+  const instance = container.resolve(A);
+
+  expect(instance.container).toBe(container);
 });
