@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v3
@@ -26,12 +28,12 @@ jobs:
 
       - name: Dependencies
         run: npm ci
-      
-      - name: Build
-        run: npm run build
 
       - name: Test
         run: npm run test
+      
+      - name: Build
+        run: npm run build
 
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v3.4.2
