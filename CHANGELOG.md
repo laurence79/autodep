@@ -1,3 +1,10 @@
+# [1.0.0-beta.3](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2024-04-24)
+
+
+### Bug Fixes
+
+* Publish publicly ([5ac9bc0](https://github.com/laurence79/ts-ioc/commit/5ac9bc0a58872b2d36ff0b5e8717612a582e82ef))
+
 # [1.0.0-beta.2](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2024-04-24)
 
 
