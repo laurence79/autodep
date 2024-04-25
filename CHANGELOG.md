@@ -1,3 +1,10 @@
+# [1.0.0-beta.5](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2024-04-25)
+
+
+### Features
+
+* Disposables ([5994355](https://github.com/laurence79/ts-ioc/commit/59943559de5ebe6116e5208371e12390f3be541b))
+
 # [1.0.0-beta.4](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2024-04-24)
 
 
