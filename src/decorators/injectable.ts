@@ -1,7 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Capture reflection metadata about a constructor
+ * @returns a decorator
+ */
 function injectable() {
-  return function (target: any) {
+  return function (target: object) {
     Reflect.defineMetadata('ioc:injectable', true, target);
   };
 }

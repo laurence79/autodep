@@ -5,13 +5,9 @@
 import { Provider } from '../types/Provider';
 import { Constructor } from '../types/Constructor';
 import ResolutionContext from '../ResolutionContext';
-import InternalContainer from '../InternalContainer';
 
 class ConstructProvider<T> implements Provider<T> {
-  constructor(
-    private readonly container: InternalContainer,
-    private readonly ctor: Constructor<T>
-  ) {}
+  constructor(private readonly ctor: Constructor<T>) {}
 
   private readonly params =
     (Reflect.getMetadata('design:paramtypes', this.ctor) as any[]) || [];
@@ -26,7 +22,7 @@ class ConstructProvider<T> implements Provider<T> {
     }
 
     const deps = this.params.map(param =>
-      this.container.resolveWithContext(
+      context.resolver.resolveWithContext(
         param as Constructor,
         context.withAppend(param)
       )

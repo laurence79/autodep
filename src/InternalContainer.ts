@@ -5,35 +5,65 @@ import ResolutionContext from './ResolutionContext';
 import ConstructProvider from './providers/ConstructProvider';
 import FactoryProvider, { FactoryFn } from './providers/FactoryProvider';
 import InstanceProvider from './providers/InstanceProvider';
-import AliasProvider from './providers/AliasProvider';
-import SingletonProvider from './providers/SingletonProvider';
-import { Provider } from './types/Provider';
 import { Token } from './types/Token';
 import { RegistrationOptions } from './types/RegistrationOptions';
-import { Scope } from './Scope';
 import { Constructor } from './types/Constructor';
-import isConstructor from './helpers/isConstructor';
 import { InternalResolver } from './types/InternalResolver';
 import Container from './Container';
+import { Lifecycle } from './lifecycles/Lifecycle';
+import Registry from './Registry';
+import LifecycleManagers from './lifecycles/LifecycleManagers';
 
 class InternalContainer extends Container implements InternalResolver {
   constructor(public readonly parent?: InternalContainer) {
     super();
+
+    this.registry = new Registry(parent?.registry);
+    this.lifecycles = new LifecycleManagers(this.registry);
+
     this.registerAlias(Container, InternalContainer);
     this.registerSingleton(InternalContainer, this);
   }
 
-  private providers = new Map<Token, Provider>();
+  private readonly registry: Registry;
 
-  private options = new Map<Token, RegistrationOptions>();
+  private readonly lifecycles: LifecycleManagers;
 
-  public createChildContainer() {
-    return new InternalContainer(this);
+  private _disposed = false;
+
+  public get disposed() {
+    return this._disposed;
   }
 
-  public register<T>(ctor: Constructor<T>, options: RegistrationOptions): this {
-    this.providers.set(ctor, new ConstructProvider(this, ctor));
-    this.options.set(ctor, options);
+  private readonly childContainers = new Set<WeakRef<InternalContainer>>();
+
+  private throwIfDisposed() {
+    if (this._disposed) {
+      throw new Error('Can not use a disposed container.');
+    }
+  }
+
+  public createChildContainer() {
+    this.throwIfDisposed();
+
+    const child = new InternalContainer(this);
+    this.childContainers.add(new WeakRef(child));
+
+    return child;
+  }
+
+  public register<T>(
+    ctor: Constructor<T>,
+    options?: RegistrationOptions
+  ): this {
+    this.throwIfDisposed();
+
+    this.registry.register(
+      ctor,
+      new ConstructProvider(ctor),
+      options ?? { lifecycle: Lifecycle.transient }
+    );
+
     return this;
   }
 
@@ -41,72 +71,75 @@ class InternalContainer extends Container implements InternalResolver {
     from: Token<T1>,
     to: Token<T2>
   ): this {
-    this.providers.set(from, new AliasProvider(to));
+    this.throwIfDisposed();
+
+    this.registry.registerAlias(from, to);
+
     return this;
   }
 
   public registerFactory<T>(
-    token: Token<T>,
+    ctor: Constructor<T>,
     factory: FactoryFn<T>,
-    maybeOptions?: RegistrationOptions
+    options?: RegistrationOptions
   ) {
-    this.providers.set(token, new FactoryProvider(factory));
+    this.throwIfDisposed();
 
-    if (maybeOptions) {
-      this.options.set(token, maybeOptions);
-    }
+    this.registry.register(
+      ctor,
+      new FactoryProvider(factory),
+      options ?? { lifecycle: Lifecycle.transient }
+    );
 
     return this;
   }
 
   public registerSingleton<T>(ctor: Constructor<T>, maybeInstance?: T) {
+    this.throwIfDisposed();
+
     if (maybeInstance) {
-      this.providers.set(ctor, new InstanceProvider(maybeInstance));
+      this.registry.register(ctor, new InstanceProvider(maybeInstance), {
+        lifecycle: Lifecycle.singleton
+      });
+
       return this;
     }
 
-    this.providers.set(
-      ctor,
-      new SingletonProvider(new ConstructProvider(this, ctor))
-    );
-    return this;
+    return this.register(ctor, { lifecycle: Lifecycle.singleton });
   }
 
   public resolve<T>(token: Token<T>): T {
-    const context = new ResolutionContext(this, undefined, [token]);
+    const context = new ResolutionContext(new Object(), this, [token]);
+
     return this.resolveWithContext(token, context);
   }
 
   public resolveWithContext<T>(token: Token<T>, context: ResolutionContext): T {
-    const shouldCache = this.options.get(token)?.scope === Scope.resolution;
+    this.throwIfDisposed();
 
-    if (shouldCache && context.cache.has(token)) {
-      return context.cache.get(token) as T;
-    }
+    const constructor = this.registry.getConstructor(token);
 
-    const registeredProvider = this.providers.get(token) as
-      | Provider<T>
-      | undefined;
+    const lifecycle =
+      this.registry.getRegistration(constructor)?.[1].lifecycle ??
+      Lifecycle.transient;
 
-    if (!registeredProvider && this.parent) {
-      return this.parent.resolve(token);
-    }
+    return this.lifecycles.getLifecycle(lifecycle).provide(token, context);
+  }
 
-    const provider =
-      registeredProvider ??
-      (isConstructor(token) ? new ConstructProvider<T>(this, token) : null);
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.throwIfDisposed();
 
-    if (!provider) {
-      throw new Error(`Can not resolve ${String(token)}`);
-    }
+    this._disposed = true;
 
-    const instance = provider.provide(context);
+    await Promise.all([
+      this.lifecycles[Symbol.asyncDispose](),
 
-    if (shouldCache) {
-      context.cache.set(token, instance);
-    }
+      ...[...this.childContainers.values()].map(ref =>
+        ref.deref()?.[Symbol.asyncDispose]()
+      )
+    ]);
 
-    return instance;
+    this.childContainers.clear();
   }
 }
 

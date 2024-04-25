@@ -1,5 +1,8 @@
-import type { Scope } from '../Scope';
+import { Lifecycle } from '../lifecycles/Lifecycle';
 
+/**
+ * Options affecting the registration and resolution of a type.
+ */
 export type RegistrationOptions = {
-  scope: Scope;
+  lifecycle: Lifecycle;
 };

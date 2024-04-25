@@ -55,8 +55,7 @@ module.exports = {
         }
       },
       rules: {
-        // couchdb uses this everywhere
-        'no-underscore-dangle': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
 
         '@typescript-eslint/no-unused-vars': [
           'warn',

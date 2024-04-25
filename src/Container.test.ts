@@ -2,7 +2,7 @@ import Container from './Container';
 import createContainer from './createContainer';
 import injectable from './decorators/injectable';
 import isConstructor from './helpers/isConstructor';
-import { Scope } from './Scope';
+import { Lifecycle } from './lifecycles/Lifecycle';
 
 it('returns registered instances', () => {
   class A {}
@@ -150,7 +150,7 @@ it('factory can use resolution chain', () => {
   expect(instance.logger.type).toEqual('Service');
 });
 
-it('Resolution scoped registration resolves multiple dependencies of the same type as the same instance', () => {
+it('Per resolution lifecycle registration resolves multiple dependencies of the same type as the same instance', () => {
   class A {}
 
   @injectable()
@@ -160,18 +160,21 @@ it('Resolution scoped registration resolves multiple dependencies of the same ty
 
   @injectable()
   class C {
-    constructor(public a: A, public b: B) {}
+    constructor(
+      public a: A,
+      public b: B
+    ) {}
   }
 
   const container = createContainer();
-  container.register(A, { scope: Scope.resolution });
+  container.register(A, { lifecycle: Lifecycle.perResolution });
 
   const instance = container.resolve(C);
 
   expect(instance.a).toBe(instance.b.a);
 });
 
-it('Transient scoped registration resolves multiple dependencies of the same type to different instances', () => {
+it('Transient lifecycle registration resolves multiple dependencies of the same type to different instances', () => {
   class A {}
 
   @injectable()
@@ -181,11 +184,14 @@ it('Transient scoped registration resolves multiple dependencies of the same typ
 
   @injectable()
   class C {
-    constructor(public a: A, public b: B) {}
+    constructor(
+      public a: A,
+      public b: B
+    ) {}
   }
 
   const container = createContainer();
-  container.register(A, { scope: Scope.transient });
+  container.register(A);
 
   const instance = container.resolve(C);
 
@@ -202,4 +208,79 @@ it('can inject the container', () => {
   const instance = container.resolve(A);
 
   expect(instance.container).toBe(container);
+});
+
+it('disposes instances when the container disposes', async () => {
+  class A implements Disposable {
+    public disposed = false;
+
+    [Symbol.dispose](): void {
+      this.disposed = true;
+    }
+  }
+
+  let instance: A;
+
+  {
+    await using container = createContainer();
+    container.register(A);
+    instance = container.resolve(A);
+  }
+
+  expect(instance.disposed).toBe(true);
+});
+
+it('child container only disposes instances it resolved', async () => {
+  class A implements Disposable {
+    public disposed = false;
+
+    [Symbol.dispose](): void {
+      this.disposed = true;
+    }
+  }
+
+  const container = createContainer();
+  container.register(A);
+  const instanceOne = container.resolve(A);
+
+  let instanceTwo: A;
+  {
+    await using child = container.createChildContainer();
+    instanceTwo = child.resolve(A);
+  }
+
+  expect(instanceOne.disposed).toBe(false);
+  expect(instanceTwo.disposed).toBe(true);
+});
+
+it('parent container disposes child containers', async () => {
+  const container = createContainer();
+  const child = container.createChildContainer();
+
+  await container[Symbol.asyncDispose]();
+
+  expect(container.disposed).toBe(true);
+  expect(child.disposed).toBe(true);
+});
+
+it('parent singletons resolved by a child are not disposed with the child', async () => {
+  class A implements Disposable {
+    public disposed = false;
+
+    [Symbol.dispose](): void {
+      this.disposed = true;
+    }
+  }
+
+  const container = createContainer();
+  container.registerSingleton(A);
+
+  let instance: A;
+
+  {
+    await using child = container.createChildContainer();
+    instance = child.resolve(A);
+  }
+
+  expect(instance.disposed).toBe(false);
 });

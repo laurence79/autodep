@@ -1,27 +1,26 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { InternalResolver } from './types/InternalResolver';
-import { Resolver } from './types/Resolver';
+import InternalContainer from './InternalContainer';
 import { Token } from './types/Token';
 
 class ResolutionContext {
   constructor(
-    public readonly resolver: Resolver & InternalResolver,
-    public readonly cache = new Map<Token, any>(),
+    public readonly resolutionId: object,
+    public readonly resolver: InternalContainer,
     public readonly resolutionChain: Token[] = []
   ) {}
 
-  public withReplaceHead(token: Token) {
-    return new ResolutionContext(this.resolver, this.cache, [
-      token,
-      ...this.resolutionChain.slice(1)
-    ]);
-  }
-
   public withAppend(token: Token) {
-    return new ResolutionContext(this.resolver, this.cache, [
+    return new ResolutionContext(this.resolutionId, this.resolver, [
       token,
       ...this.resolutionChain
     ]);
+  }
+
+  public withResolver(resolver: InternalContainer) {
+    return new ResolutionContext(
+      this.resolutionId,
+      resolver,
+      this.resolutionChain
+    );
   }
 }
 
