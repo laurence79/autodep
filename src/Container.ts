@@ -1,6 +1,9 @@
 import { FactoryFn } from './providers/FactoryProvider';
 import { Token } from './types/Token';
-import { RegistrationOptions } from './types/RegistrationOptions';
+import {
+  RegistrationOptions,
+  SingletonRegistrationOptions
+} from './types/RegistrationOptions';
 import { Constructor } from './types/Constructor';
 import { Resolver } from './types/Resolver';
 
@@ -66,12 +69,20 @@ abstract class Container implements Resolver, AsyncDisposable {
    */
   public abstract registerSingleton<T>(ctor: Constructor<T>): this;
   /**
-   * Registers a type as a singleton.
-   * Shorthand for `register(ctor, { lifecycle: Lifecycle.singleton })`
+   * Registers an instance as a singleton.
    * @param ctor A constructor
    * @param instance A pre-created instance to use as the singleton
    */
   public abstract registerSingleton<T>(ctor: Constructor<T>, instance: T): this;
+  /**
+   * Registers a type as a singleton, or per-container singleton.
+   * @param ctor A constructor
+   * @param options Options affecting registration and resolution
+   */
+  public abstract registerSingleton<T>(
+    ctor: Constructor<T>,
+    options: SingletonRegistrationOptions
+  ): this;
 
   /**
    * Asks the resolver to resolve an object.

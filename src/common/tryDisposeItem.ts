@@ -1,5 +1,5 @@
-import isAsyncDisposable from './isAsyncDisposable';
-import isSyncDisposable from './isSyncDisposable';
+import isAsyncDisposable from '../types/guards/isAsyncDisposable';
+import isSyncDisposable from '../types/guards/isSyncDisposable';
 
 const tryDisposeItem = async (item: unknown) => {
   if (isAsyncDisposable(item)) {

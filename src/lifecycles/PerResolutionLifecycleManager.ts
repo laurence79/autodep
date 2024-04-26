@@ -1,15 +1,12 @@
 import ResolutionContext from '../ResolutionContext';
-import DisposableOnce from '../common/DisposableOnce';
-import tryDisposeItem from '../helpers/tryDisposeItem';
 import { Constructor } from '../types/Constructor';
 import { InternalResolver } from '../types/InternalResolver';
 import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
+import { isDisposable } from '../types/guards/isDisposable';
+import WeakLifecycleManager from './WeakLifecycleManager';
 
-class PerResolutionLifecycleManager
-  extends DisposableOnce
-  implements AsyncDisposable
-{
+class PerResolutionLifecycleManager extends WeakLifecycleManager {
   constructor(
     private readonly registry: Registry,
     private readonly resolver: InternalResolver
@@ -18,14 +15,6 @@ class PerResolutionLifecycleManager
   }
 
   private readonly caches = new WeakMap<object, Map<Constructor, unknown>>();
-
-  private readonly instances = new Map<Constructor, WeakRef<object>>();
-
-  async dispose(): Promise<void> {
-    await Promise.all([...this.instances.values()].map(tryDisposeItem));
-
-    this.instances.clear();
-  }
 
   private getOrCreateCache(context: ResolutionContext) {
     const { resolutionId } = context;
@@ -52,8 +41,13 @@ class PerResolutionLifecycleManager
     }
 
     const instance = this.resolver.construct(constructor, context);
-
     cache.set(constructor, instance);
+
+    this.addInstance(constructor, instance);
+
+    if (isDisposable(instance)) {
+      this.addDisposable(instance);
+    }
 
     return instance;
   }

@@ -1,21 +1,24 @@
 import DisposableOnce from './common/DisposableOnce';
 import { Constructor } from './types/Constructor';
 import { InternalResolver } from './types/InternalResolver';
-import { RegistrationOptions } from './types/RegistrationOptions';
+import {
+  RegistrationOptions,
+  SingletonRegistrationOptions
+} from './types/RegistrationOptions';
 import { Registry } from './types/Registry';
 import { Token } from './types/Token';
 import ResolutionContext from './ResolutionContext';
 import ConstructProvider from './providers/ConstructProvider';
 import FactoryProvider, { FactoryFn } from './providers/FactoryProvider';
-import InstanceProvider from './providers/InstanceProvider';
 import Container from './Container';
 import { Lifecycle } from './lifecycles/Lifecycle';
-import isConstructor from './helpers/isConstructor';
+import isConstructor from './types/guards/isConstructor';
 import SingletonLifecycleManager from './lifecycles/SingletonLifecycleManager';
 import PerContainerLifecycleManager from './lifecycles/PerContainerLifecycleManager';
 import PerResolutionLifecycleManager from './lifecycles/PerResolutionLifecycleManager';
 import TransientLifecycleManager from './lifecycles/TransientLifecycleManager';
 import { Registration } from './types/Registration';
+import isRegistrationOptions from './types/guards/isRegistrationOptions';
 
 class InternalContainer
   extends DisposableOnce
@@ -36,7 +39,7 @@ class InternalContainer
     [Lifecycle.singleton]: new SingletonLifecycleManager(this, this),
     [Lifecycle.perContainer]: new PerContainerLifecycleManager(this, this),
     [Lifecycle.perResolution]: new PerResolutionLifecycleManager(this, this),
-    [Lifecycle.transient]: new TransientLifecycleManager()
+    [Lifecycle.transient]: new TransientLifecycleManager(this, this)
   } as const;
 
   private readonly childContainers = new Set<WeakRef<InternalContainer>>();
@@ -143,21 +146,29 @@ class InternalContainer
     return this;
   }
 
-  public registerSingleton<T>(ctor: Constructor<T>, maybeInstance?: T) {
+  public registerSingleton<T>(
+    ctor: Constructor<T>,
+    instanceOrOptions?: T | SingletonRegistrationOptions
+  ) {
     this.throwIfDisposed();
 
-    if (maybeInstance) {
-      this.registrations.set(ctor, {
-        provider: new InstanceProvider(maybeInstance),
-        options: {
-          lifecycle: Lifecycle.singleton
-        }
-      });
+    const instance = !isRegistrationOptions(instanceOrOptions)
+      ? instanceOrOptions
+      : undefined;
+
+    const options = isRegistrationOptions(instanceOrOptions)
+      ? instanceOrOptions
+      : { lifecycle: Lifecycle.singleton };
+
+    if (instance) {
+      this.registrations.set(ctor, { options });
+
+      this.lifecycles[Lifecycle.singleton].injectInstance(ctor, instance);
 
       return this;
     }
 
-    return this.register(ctor, { lifecycle: Lifecycle.singleton });
+    return this.register(ctor, options);
   }
 
   public resolve<T>(token: Token<T>): T {

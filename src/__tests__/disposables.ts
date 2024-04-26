@@ -74,3 +74,22 @@ test('parent singletons resolved by a child are not disposed with the child', as
 
   expect(instance.disposed).toBe(false);
 });
+
+test("container does not dispose instances it didn't create", async () => {
+  class A implements Disposable {
+    public disposed = false;
+
+    [Symbol.dispose](): void {
+      this.disposed = true;
+    }
+  }
+
+  const instance = new A();
+  {
+    await using container = createContainer();
+    container.registerSingleton(A, instance);
+    container.resolve(A);
+  }
+
+  expect(instance.disposed).toBe(false);
+});

@@ -1,16 +1,13 @@
 import ResolutionContext from '../ResolutionContext';
-import DisposableOnce from '../common/DisposableOnce';
-import tryDisposeItem from '../helpers/tryDisposeItem';
 import ConstructProvider from '../providers/ConstructProvider';
 import { Constructor } from '../types/Constructor';
 import { InternalResolver } from '../types/InternalResolver';
 import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
+import { isDisposable } from '../types/guards/isDisposable';
+import StrongLifecycleManager from './StrongLifecycleManager';
 
-class SingletonLifecycleManager
-  extends DisposableOnce
-  implements AsyncDisposable
-{
+class SingletonLifecycleManager extends StrongLifecycleManager {
   constructor(
     private readonly registry: Registry,
     private readonly resolver: InternalResolver
@@ -18,12 +15,10 @@ class SingletonLifecycleManager
     super();
   }
 
-  private readonly instances = new Map<Constructor, unknown>();
+  public injectInstance<T>(ctor: Constructor<T>, instance: T) {
+    this.throwIfDisposed();
 
-  async dispose(): Promise<void> {
-    await Promise.all([...this.instances.values()].map(tryDisposeItem));
-
-    this.instances.clear();
+    this.retainInstance(ctor, instance);
   }
 
   public provide<T>(token: Token<T>, context: ResolutionContext): T {
@@ -31,8 +26,9 @@ class SingletonLifecycleManager
 
     const constructor = this.registry.getConstructor(token);
 
-    if (this.instances.has(constructor)) {
-      return this.instances.get(constructor) as T;
+    const maybeInstance = this.getInstance<T>(constructor);
+    if (maybeInstance) {
+      return maybeInstance;
     }
 
     const maybeRegistration = this.registry.getLocalRegistration(constructor);
@@ -49,7 +45,11 @@ class SingletonLifecycleManager
 
     const instance = provider.provide(context);
 
-    this.instances.set(constructor, instance);
+    this.retainInstance(constructor, instance);
+
+    if (isDisposable(instance)) {
+      this.addDisposable(instance);
+    }
 
     return instance;
   }

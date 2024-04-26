@@ -1,15 +1,11 @@
 import ResolutionContext from '../ResolutionContext';
-import DisposableOnce from '../common/DisposableOnce';
-import tryDisposeItem from '../helpers/tryDisposeItem';
-import { Constructor } from '../types/Constructor';
 import { InternalResolver } from '../types/InternalResolver';
 import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
+import { isDisposable } from '../types/guards/isDisposable';
+import StrongLifecycleManager from './StrongLifecycleManager';
 
-class PerContainerLifecycleManager
-  extends DisposableOnce
-  implements AsyncDisposable
-{
+class PerContainerLifecycleManager extends StrongLifecycleManager {
   constructor(
     private readonly registry: Registry,
     private readonly resolver: InternalResolver
@@ -17,25 +13,23 @@ class PerContainerLifecycleManager
     super();
   }
 
-  private readonly instances = new Map<Constructor, unknown>();
-
-  protected async dispose(): Promise<void> {
-    await Promise.all([...this.instances.values()].map(tryDisposeItem));
-    this.instances.clear();
-  }
-
   public provide<T>(token: Token<T>, context: ResolutionContext): T {
     this.throwIfDisposed();
 
     const constructor = this.registry.getConstructor(token);
 
-    if (this.instances.has(constructor)) {
-      return this.instances.get(constructor) as T;
+    const maybeInstance = this.getInstance<T>(constructor);
+    if (maybeInstance) {
+      return maybeInstance;
     }
 
     const instance = this.resolver.construct(token, context);
 
-    this.instances.set(constructor, instance);
+    this.retainInstance(constructor, instance);
+
+    if (isDisposable(instance)) {
+      this.addDisposable(instance);
+    }
 
     return instance;
   }
