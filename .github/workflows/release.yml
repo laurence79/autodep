@@ -17,7 +17,7 @@ jobs:
       matrix:
         version: [16, 18, 20]
 
-    name: Test on node v${{ matrix.version }}
+    name: Node v${{ matrix.version }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
