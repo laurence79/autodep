@@ -5,11 +5,10 @@ import { Constructor } from '../types/Constructor';
 import { InternalResolver } from '../types/InternalResolver';
 import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
-import { LifecycleManager } from './LifecycleManager';
 
 class PerContainerLifecycleManager
   extends DisposableOnce
-  implements LifecycleManager, AsyncDisposable
+  implements AsyncDisposable
 {
   constructor(
     private readonly registry: Registry,

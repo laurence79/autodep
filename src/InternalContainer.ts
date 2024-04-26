@@ -33,10 +33,10 @@ class InternalContainer
   private readonly registrations = new Map<Constructor, Registration>();
 
   private readonly lifecycles = {
-    singleton: new SingletonLifecycleManager(this, this),
-    perContainer: new PerContainerLifecycleManager(this, this),
-    perResolution: new PerResolutionLifecycleManager(this, this),
-    transient: new TransientLifecycleManager()
+    [Lifecycle.singleton]: new SingletonLifecycleManager(this, this),
+    [Lifecycle.perContainer]: new PerContainerLifecycleManager(this, this),
+    [Lifecycle.perResolution]: new PerResolutionLifecycleManager(this, this),
+    [Lifecycle.transient]: new TransientLifecycleManager()
   } as const;
 
   private readonly childContainers = new Set<WeakRef<InternalContainer>>();
