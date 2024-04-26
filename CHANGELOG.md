@@ -1,3 +1,10 @@
+# [1.0.0-beta.11](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2024-04-26)
+
+
+### Features
+
+* Export Token and Constructor for use by consumers ([c3daec5](https://github.com/laurence79/ts-ioc/commit/c3daec5525d3ec51dd38306a069b5f247599eaec))
+
 # [1.0.0-beta.10](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-04-26)
 
 
