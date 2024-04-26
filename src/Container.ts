@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FactoryFn } from './providers/FactoryProvider';
 import { Token } from './types/Token';
 import { RegistrationOptions } from './types/RegistrationOptions';

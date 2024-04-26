@@ -1,16 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { Provider } from '../types/Provider';
 import { Constructor } from '../types/Constructor';
 import ResolutionContext from '../ResolutionContext';
+import { Token } from '../types/Token';
 
 class ConstructProvider<T> implements Provider<T> {
   constructor(private readonly ctor: Constructor<T>) {}
 
   private readonly params =
-    (Reflect.getMetadata('design:paramtypes', this.ctor) as any[]) || [];
+    (Reflect.getMetadata('design:paramtypes', this.ctor) as unknown[]) || [];
 
   provide(context: ResolutionContext): T {
     if (!this.params || this.params.length === 0) {

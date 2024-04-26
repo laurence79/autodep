@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type ResolutionContext from '../ResolutionContext';
 
-export interface Provider<T = any> {
+export interface Provider<T = unknown> {
   provide(context: ResolutionContext): T;
 }
