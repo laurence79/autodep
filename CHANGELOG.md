@@ -1,3 +1,11 @@
+# [1.0.0-beta.6](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2024-04-26)
+
+
+### Bug Fixes
+
+* Duplication in resolution chain ([37bc968](https://github.com/laurence79/ts-ioc/commit/37bc9681fdf93e207b2c9fa97dac0eb980987a0d))
+* Only constructors will exist in the resolution chain ([e27c48e](https://github.com/laurence79/ts-ioc/commit/e27c48ec7422647f3927ecd9aa571e9fa1d20e36))
+
 # [1.0.0-beta.5](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2024-04-25)
 
 
