@@ -2,7 +2,7 @@ import createContainer from '../createContainer';
 import injectable from '../decorators/injectable';
 import { Lifecycle } from '../lifecycles/Lifecycle';
 
-it('Per resolution lifecycle registration resolves multiple dependencies of the same type as the same instance', () => {
+test('Per resolution lifecycle registration resolves multiple dependencies of the same type as the same instance', () => {
   class A {}
 
   @injectable()

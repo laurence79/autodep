@@ -1,6 +1,6 @@
 import createContainer from '../createContainer';
 
-it('disposes instances when the container disposes', async () => {
+test('disposes instances when the container disposes', async () => {
   class A implements Disposable {
     public disposed = false;
 
@@ -20,7 +20,7 @@ it('disposes instances when the container disposes', async () => {
   expect(instance.disposed).toBe(true);
 });
 
-it('child container only disposes instances it resolved', async () => {
+test('child container only disposes instances it resolved', async () => {
   class A implements Disposable {
     public disposed = false;
 
@@ -43,7 +43,7 @@ it('child container only disposes instances it resolved', async () => {
   expect(instanceTwo.disposed).toBe(true);
 });
 
-it('parent container disposes child containers', async () => {
+test('parent container disposes child containers', async () => {
   const container = createContainer();
   const child = container.createChildContainer();
 
@@ -53,7 +53,7 @@ it('parent container disposes child containers', async () => {
   expect(child.disposed).toBe(true);
 });
 
-it('parent singletons resolved by a child are not disposed with the child', async () => {
+test('parent singletons resolved by a child are not disposed with the child', async () => {
   class A implements Disposable {
     public disposed = false;
 

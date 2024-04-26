@@ -1,6 +1,6 @@
 import createContainer from '../createContainer';
 
-it("defers to the parent container if type can't be resolved locally", () => {
+test("defers to the parent container if type can't be resolved locally", () => {
   class A {}
 
   const container = createContainer();

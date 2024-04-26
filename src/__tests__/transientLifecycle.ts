@@ -1,7 +1,7 @@
 import createContainer from '../createContainer';
 import injectable from '../decorators/injectable';
 
-it('Transient lifecycle registration resolves multiple dependencies of the same type to different instances', () => {
+test('Transient lifecycle registration resolves multiple dependencies of the same type to different instances', () => {
   class A {}
 
   @injectable()

@@ -2,7 +2,7 @@ import Container from '../Container';
 import createContainer from '../createContainer';
 import injectable from '../decorators/injectable';
 
-it('returns registered instances', () => {
+test('returns registered instances', () => {
   class A {}
 
   const container = createContainer();
@@ -15,7 +15,7 @@ it('returns registered instances', () => {
   expect(instance).toBe(resolved);
 });
 
-it('constructs unregistered types if they have no params', () => {
+test('constructs unregistered types if they have no params', () => {
   class A {}
 
   const container = createContainer();
@@ -25,7 +25,7 @@ it('constructs unregistered types if they have no params', () => {
   expect(instance).toBeInstanceOf(A);
 });
 
-it('creates instances with dependencies', () => {
+test('creates instances with dependencies', () => {
   class B {}
 
   @injectable()
@@ -41,7 +41,7 @@ it('creates instances with dependencies', () => {
   expect(instance.b).toBeInstanceOf(B);
 });
 
-it('throws an error if unregistered type has params', () => {
+test('throws an error if unregistered type has params', () => {
   class A {
     constructor(public b: string) {}
   }
@@ -51,7 +51,7 @@ it('throws an error if unregistered type has params', () => {
   expect(() => container.resolve(A)).toThrow('Unable to construct "A"');
 });
 
-it('uses registered instances when resolving dependencies', () => {
+test('uses registered instances when resolving dependencies', () => {
   class B {}
 
   @injectable()
@@ -66,7 +66,7 @@ it('uses registered instances when resolving dependencies', () => {
   expect(container.resolve(A).b).toBe(instance);
 });
 
-it('handles registering an extended type to be resolved in place of a superclass', () => {
+test('handles registering an extended type to be resolved in place of a superclass', () => {
   class A {}
   class B extends A {}
 
@@ -77,7 +77,7 @@ it('handles registering an extended type to be resolved in place of a superclass
   expect(instance).toBeInstanceOf(B);
 });
 
-it('handles registering an extended type to be resolved in place of a abstract base class', () => {
+test('handles registering an extended type to be resolved in place of a abstract base class', () => {
   abstract class A {}
   class B extends A {}
 
@@ -88,7 +88,7 @@ it('handles registering an extended type to be resolved in place of a abstract b
   expect(instance).toBeInstanceOf(B);
 });
 
-it('can inject the container', () => {
+test('can inject the container', () => {
   @injectable()
   class A {
     constructor(public container: Container) {}

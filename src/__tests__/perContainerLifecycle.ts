@@ -1,7 +1,7 @@
 import createContainer from '../createContainer';
 import { Lifecycle } from '../lifecycles/Lifecycle';
 
-it('per container singletons resolve to the same instance for each container', () => {
+test('per container singletons resolve to the same instance for each container', () => {
   class A {}
 
   const container = createContainer();

@@ -1,6 +1,6 @@
 import createContainer from '../createContainer';
 
-it('singletons resolve to the same instance each time', () => {
+test('singletons resolve to the same instance each time', () => {
   class A {}
 
   const container = createContainer();

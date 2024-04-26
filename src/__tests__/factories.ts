@@ -2,7 +2,7 @@ import createContainer from '../createContainer';
 import injectable from '../decorators/injectable';
 import { Constructor } from '../types/Constructor';
 
-it('handles registering a factory', () => {
+test('handles registering a factory', () => {
   class A {
     constructor(public greeting: string) {}
   }
@@ -14,7 +14,7 @@ it('handles registering a factory', () => {
   expect(instance.greeting).toEqual('hello');
 });
 
-it('factory can use resolution chain', () => {
+test('factory can use resolution chain', () => {
   class Logger {
     constructor(public type: string) {}
   }
