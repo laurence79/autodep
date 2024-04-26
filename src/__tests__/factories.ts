@@ -1,5 +1,6 @@
 import createContainer from '../createContainer';
 import injectable from '../decorators/injectable';
+import { Constructor } from '../types/Constructor';
 
 it('handles registering a factory', () => {
   class A {
@@ -24,12 +25,17 @@ it('factory can use resolution chain', () => {
   }
 
   const container = createContainer();
+  let receivedChain: Constructor[];
+
   container.registerFactory(Logger, (_, chain) => {
-    const receivingClass = chain.at(2);
+    receivedChain = chain;
+    const receivingClass = chain.at(1);
     const name = receivingClass ? receivingClass.name : '';
     return new Logger(name);
   });
 
   const instance = container.resolve(Service);
+
+  expect(receivedChain!).toEqual([Logger, Service]);
   expect(instance.logger.type).toEqual('Service');
 });
