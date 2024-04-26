@@ -1,3 +1,10 @@
+# [1.0.0-beta.9](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2024-04-26)
+
+
+### Bug Fixes
+
+* Specify node engine correctly ([c2e7874](https://github.com/laurence79/ts-ioc/commit/c2e787472fe861c3970af3983b11d2812b4f0418))
+
 # [1.0.0-beta.8](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2024-04-26)
 
 
