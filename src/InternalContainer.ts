@@ -109,15 +109,20 @@ class InternalContainer extends Container implements InternalResolver {
   }
 
   public resolve<T>(token: Token<T>): T {
-    const context = new ResolutionContext(new Object(), this, [token]);
+    const context = new ResolutionContext(new Object(), this, []);
 
     return this.resolveWithContext(token, context);
   }
 
-  public resolveWithContext<T>(token: Token<T>, context: ResolutionContext): T {
+  public resolveWithContext<T>(
+    token: Token<T>,
+    contextIn: ResolutionContext
+  ): T {
     this.throwIfDisposed();
 
     const constructor = this.registry.getConstructor(token);
+
+    const context = contextIn.withAppend(constructor);
 
     const lifecycle =
       this.registry.getRegistration(constructor)?.[1].lifecycle ??

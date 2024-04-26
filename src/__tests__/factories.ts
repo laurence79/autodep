@@ -1,6 +1,5 @@
 import createContainer from '../createContainer';
 import injectable from '../decorators/injectable';
-import isConstructor from '../helpers/isConstructor';
 
 it('handles registering a factory', () => {
   class A {
@@ -26,11 +25,8 @@ it('factory can use resolution chain', () => {
 
   const container = createContainer();
   container.registerFactory(Logger, (_, chain) => {
-    const receivingToken = chain.at(1);
-    const name =
-      receivingToken && isConstructor(receivingToken)
-        ? receivingToken.name
-        : '';
+    const receivingClass = chain.at(2);
+    const name = receivingClass ? receivingClass.name : '';
     return new Logger(name);
   });
 
