@@ -196,11 +196,16 @@ class InternalContainer
 
   async dispose(): Promise<void> {
     await Promise.all([
-      ...Object.values(this.lifecycles).map(l => l[Symbol.asyncDispose]()),
+      ...Object.values(this.lifecycles).map(
+        l => !l.disposed && l[Symbol.asyncDispose]()
+      ),
 
-      ...[...this.childContainers.values()].map(ref =>
-        ref.deref()?.[Symbol.asyncDispose]()
-      )
+      ...[...this.childContainers.values()].map(async ref => {
+        const child = ref.deref();
+        if (child && !child.disposed) {
+          await child[Symbol.asyncDispose]();
+        }
+      })
     ]);
 
     this.childContainers.clear();

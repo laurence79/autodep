@@ -1,4 +1,6 @@
+import Container from '../Container';
 import createContainer from '../createContainer';
+import injectable from '../decorators/injectable';
 
 test('disposes instances when the container disposes', async () => {
   class A implements Disposable {
@@ -92,4 +94,15 @@ test("container does not dispose instances it didn't create", async () => {
   }
 
   expect(instance.disposed).toBe(false);
+});
+
+test('only disposes child containers if they are not already disposed', async () => {
+  @injectable()
+  class A {
+    constructor(public container: Container) {}
+  }
+
+  await using container = createContainer();
+  await using child = container.createChildContainer();
+  child.resolve(A);
 });
