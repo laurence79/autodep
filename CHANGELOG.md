@@ -1,3 +1,10 @@
+# [1.0.0-beta.10](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2024-04-26)
+
+
+### Bug Fixes
+
+* Only dispose child containers if they aren't already disposed ([87aca71](https://github.com/laurence79/ts-ioc/commit/87aca717a3dcc3897cb5d1bb7ede05d78d9a9323))
+
 # [1.0.0-beta.9](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2024-04-26)
 
 
