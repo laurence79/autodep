@@ -1,3 +1,10 @@
+# [1.0.0-beta.7](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2024-04-26)
+
+
+### Features
+
+* Container should not dispose instances it didn't create ([0944227](https://github.com/laurence79/ts-ioc/commit/0944227a382d45e6316051e1bcd038fb75a75ca3))
+
 # [1.0.0-beta.6](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2024-04-26)
 
 
