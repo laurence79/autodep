@@ -1,3 +1,10 @@
+# [1.0.0-beta.8](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2024-04-26)
+
+
+### Features
+
+* Test on multiple node versions ([c911dd2](https://github.com/laurence79/ts-ioc/commit/c911dd259f7c63e23e28aa6e01bdf871aaac05aa))
+
 # [1.0.0-beta.7](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2024-04-26)
 
 
