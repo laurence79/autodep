@@ -1,34 +1,16 @@
-import Registry from '../Registry';
 import ResolutionContext from '../ResolutionContext';
+import DisposableOnce from '../common/DisposableOnce';
 import tryDisposeItem from '../helpers/tryDisposeItem';
-import ConstructProvider from '../providers/ConstructProvider';
 import { Token } from '../types/Token';
 import { LifecycleManager } from './LifecycleManager';
 
-class TransientLifecycleManager implements LifecycleManager, AsyncDisposable {
-  public static readonly alias = 'transient';
-
-  constructor(private readonly registry: Registry) {}
-
+class TransientLifecycleManager
+  extends DisposableOnce
+  implements LifecycleManager, AsyncDisposable
+{
   private readonly instances = new Set<WeakRef<object>>();
 
-  private _disposed = false;
-
-  public get disposed() {
-    return this._disposed;
-  }
-
-  private throwIfDisposed() {
-    if (this._disposed) {
-      throw new Error('Can not use a disposed lifecycle.');
-    }
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.throwIfDisposed();
-
-    this._disposed = true;
-
+  async dispose(): Promise<void> {
     await Promise.all(
       [...this.instances.values()].map(async ref => {
         const obj = ref.deref();
@@ -44,13 +26,7 @@ class TransientLifecycleManager implements LifecycleManager, AsyncDisposable {
   public provide<T>(token: Token<T>, context: ResolutionContext): T {
     this.throwIfDisposed();
 
-    const constructor = this.registry.getConstructor(token);
-
-    const provider =
-      this.registry.getRegistration(constructor)?.[0] ??
-      new ConstructProvider(constructor);
-
-    const instance = provider.provide(context);
+    const instance = context.resolver.construct(token, context);
 
     this.instances.add(new WeakRef(instance as object));
 

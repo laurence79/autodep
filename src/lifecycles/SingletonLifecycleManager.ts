@@ -1,35 +1,27 @@
-import Registry from '../Registry';
 import ResolutionContext from '../ResolutionContext';
+import DisposableOnce from '../common/DisposableOnce';
 import tryDisposeItem from '../helpers/tryDisposeItem';
 import ConstructProvider from '../providers/ConstructProvider';
 import { Constructor } from '../types/Constructor';
+import { InternalResolver } from '../types/InternalResolver';
+import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
 import { LifecycleManager } from './LifecycleManager';
 
-class SingletonLifecycleManager implements LifecycleManager, AsyncDisposable {
-  public static readonly alias = 'singleton';
-
-  constructor(private readonly registry: Registry) {}
+class SingletonLifecycleManager
+  extends DisposableOnce
+  implements LifecycleManager, AsyncDisposable
+{
+  constructor(
+    private readonly registry: Registry,
+    private readonly resolver: InternalResolver
+  ) {
+    super();
+  }
 
   private readonly instances = new Map<Constructor, unknown>();
 
-  private _disposed = false;
-
-  public get disposed() {
-    return this._disposed;
-  }
-
-  private throwIfDisposed() {
-    if (this._disposed) {
-      throw new Error('Can not use a disposed lifecycle.');
-    }
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.throwIfDisposed();
-
-    this._disposed = true;
-
+  async dispose(): Promise<void> {
     await Promise.all([...this.instances.values()].map(tryDisposeItem));
 
     this.instances.clear();
@@ -46,15 +38,15 @@ class SingletonLifecycleManager implements LifecycleManager, AsyncDisposable {
 
     const maybeRegistration = this.registry.getLocalRegistration(constructor);
 
-    if (!maybeRegistration && context.resolver.parent) {
-      return context.resolver.parent.resolveWithContext(
+    if (!maybeRegistration && this.resolver.parent) {
+      return this.resolver.parent.resolveWithContext(
         constructor,
-        context.withResolver(context.resolver.parent)
+        context.withResolver(this.resolver.parent)
       );
     }
 
     const provider =
-      maybeRegistration?.[0] ?? new ConstructProvider(constructor);
+      maybeRegistration?.provider ?? new ConstructProvider(constructor);
 
     const instance = provider.provide(context);
 

@@ -1,40 +1,27 @@
-import Registry from '../Registry';
 import ResolutionContext from '../ResolutionContext';
+import DisposableOnce from '../common/DisposableOnce';
 import tryDisposeItem from '../helpers/tryDisposeItem';
-import ConstructProvider from '../providers/ConstructProvider';
 import { Constructor } from '../types/Constructor';
+import { InternalResolver } from '../types/InternalResolver';
+import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
-import { Lifecycle } from './Lifecycle';
 import { LifecycleManager } from './LifecycleManager';
 
 class PerContainerLifecycleManager
+  extends DisposableOnce
   implements LifecycleManager, AsyncDisposable
 {
-  public static readonly alias = 'perContainer';
-
-  constructor(private readonly registry: Registry) {}
+  constructor(
+    private readonly registry: Registry,
+    private readonly resolver: InternalResolver
+  ) {
+    super();
+  }
 
   private readonly instances = new Map<Constructor, unknown>();
 
-  private _disposed = false;
-
-  public get disposed() {
-    return this._disposed;
-  }
-
-  private throwIfDisposed() {
-    if (this._disposed) {
-      throw new Error('Can not use a disposed lifecycle.');
-    }
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.throwIfDisposed();
-
-    this._disposed = true;
-
+  protected async dispose(): Promise<void> {
     await Promise.all([...this.instances.values()].map(tryDisposeItem));
-
     this.instances.clear();
   }
 
@@ -47,12 +34,7 @@ class PerContainerLifecycleManager
       return this.instances.get(constructor) as T;
     }
 
-    const [provider] = this.registry.getRegistration(constructor) ?? [
-      new ConstructProvider(constructor),
-      { lifecycle: Lifecycle.transient }
-    ];
-
-    const instance = provider.provide(context);
+    const instance = this.resolver.construct(token, context);
 
     this.instances.set(constructor, instance);
 

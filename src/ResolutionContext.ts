@@ -1,21 +1,21 @@
-import InternalContainer from './InternalContainer';
 import { Constructor } from './types/Constructor';
+import { InternalResolver } from './types/InternalResolver';
 
 class ResolutionContext {
   constructor(
     public readonly resolutionId: object,
-    public readonly resolver: InternalContainer,
+    public readonly resolver: InternalResolver,
     public readonly resolutionChain: Constructor[] = []
   ) {}
 
-  public withAppend(constructor: Constructor) {
+  public withAppendToChain(constructor: Constructor) {
     return new ResolutionContext(this.resolutionId, this.resolver, [
       constructor,
       ...this.resolutionChain
     ]);
   }
 
-  public withResolver(resolver: InternalContainer) {
+  public withResolver(resolver: InternalResolver) {
     return new ResolutionContext(
       this.resolutionId,
       resolver,

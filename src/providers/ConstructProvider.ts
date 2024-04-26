@@ -24,7 +24,7 @@ class ConstructProvider<T> implements Provider<T> {
     const deps = this.params.map(param =>
       context.resolver.resolveWithContext(
         param as Constructor,
-        context.withAppend(param)
+        context.withAppendToChain(param)
       )
     );
 

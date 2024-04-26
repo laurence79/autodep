@@ -1,46 +1,97 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import DisposableOnce from './common/DisposableOnce';
+import { Constructor } from './types/Constructor';
+import { InternalResolver } from './types/InternalResolver';
+import { RegistrationOptions } from './types/RegistrationOptions';
+import { Registry } from './types/Registry';
+import { Token } from './types/Token';
 import ResolutionContext from './ResolutionContext';
 import ConstructProvider from './providers/ConstructProvider';
 import FactoryProvider, { FactoryFn } from './providers/FactoryProvider';
 import InstanceProvider from './providers/InstanceProvider';
-import { Token } from './types/Token';
-import { RegistrationOptions } from './types/RegistrationOptions';
-import { Constructor } from './types/Constructor';
-import { InternalResolver } from './types/InternalResolver';
 import Container from './Container';
 import { Lifecycle } from './lifecycles/Lifecycle';
-import Registry from './Registry';
-import LifecycleManagers from './lifecycles/LifecycleManagers';
+import isConstructor from './helpers/isConstructor';
+import SingletonLifecycleManager from './lifecycles/SingletonLifecycleManager';
+import PerContainerLifecycleManager from './lifecycles/PerContainerLifecycleManager';
+import PerResolutionLifecycleManager from './lifecycles/PerResolutionLifecycleManager';
+import TransientLifecycleManager from './lifecycles/TransientLifecycleManager';
+import { Registration } from './types/Registration';
 
-class InternalContainer extends Container implements InternalResolver {
+class InternalContainer
+  extends DisposableOnce
+  implements InternalResolver, Registry
+{
   constructor(public readonly parent?: InternalContainer) {
     super();
-
-    this.registry = new Registry(parent?.registry);
-    this.lifecycles = new LifecycleManagers(this.registry);
 
     this.registerAlias(Container, InternalContainer);
     this.registerSingleton(InternalContainer, this);
   }
 
-  private readonly registry: Registry;
+  private readonly aliases = new Map<Token, Token>();
 
-  private readonly lifecycles: LifecycleManagers;
+  private readonly registrations = new Map<Constructor, Registration>();
 
-  private _disposed = false;
-
-  public get disposed() {
-    return this._disposed;
-  }
+  private readonly lifecycles = {
+    singleton: new SingletonLifecycleManager(this, this),
+    perContainer: new PerContainerLifecycleManager(this, this),
+    perResolution: new PerResolutionLifecycleManager(this, this),
+    transient: new TransientLifecycleManager()
+  } as const;
 
   private readonly childContainers = new Set<WeakRef<InternalContainer>>();
 
-  private throwIfDisposed() {
-    if (this._disposed) {
-      throw new Error('Can not use a disposed container.');
+  public deAlias<T>(token: Token<T>): Token<T> | null {
+    let current: Token | undefined = token;
+    let leaf: Token = token;
+
+    while (current) {
+      leaf = current;
+      current = this.aliases.get(current);
     }
+
+    if (this.parent) {
+      return this.parent.deAlias(leaf);
+    }
+
+    return leaf;
+  }
+
+  public getConstructor<T>(token: Token<T>): Constructor<T> {
+    const constructor = this.deAlias(token);
+
+    if (!isConstructor<T>(constructor)) {
+      throw new Error(
+        `No constructor for token ${String(token)}. Leaf alias ${String(constructor)} is not a constructor`
+      );
+    }
+
+    return constructor;
+  }
+
+  public construct<T>(token: Token<T>, context: ResolutionContext): T {
+    const ctor = this.getConstructor(token);
+
+    const provider =
+      this.getRegistration(ctor)?.provider ?? new ConstructProvider(ctor);
+
+    return provider.provide(context);
+  }
+
+  public getLocalRegistration<T>(
+    constructor: Constructor<T>
+  ): Registration<T> | null {
+    return (this.registrations.get(constructor) as Registration<T>) ?? null;
+  }
+
+  public getRegistration<T>(
+    constructor: Constructor<T>
+  ): Registration<T> | null {
+    return (
+      this.getLocalRegistration(constructor) ??
+      this.parent?.getRegistration(constructor) ??
+      null
+    );
   }
 
   public createChildContainer() {
@@ -58,11 +109,10 @@ class InternalContainer extends Container implements InternalResolver {
   ): this {
     this.throwIfDisposed();
 
-    this.registry.register(
-      ctor,
-      new ConstructProvider(ctor),
-      options ?? { lifecycle: Lifecycle.transient }
-    );
+    this.registrations.set(ctor, {
+      provider: new ConstructProvider(ctor),
+      options: options ?? { lifecycle: Lifecycle.transient }
+    });
 
     return this;
   }
@@ -73,7 +123,7 @@ class InternalContainer extends Container implements InternalResolver {
   ): this {
     this.throwIfDisposed();
 
-    this.registry.registerAlias(from, to);
+    this.aliases.set(from, to);
 
     return this;
   }
@@ -85,11 +135,10 @@ class InternalContainer extends Container implements InternalResolver {
   ) {
     this.throwIfDisposed();
 
-    this.registry.register(
-      ctor,
-      new FactoryProvider(factory),
-      options ?? { lifecycle: Lifecycle.transient }
-    );
+    this.registrations.set(ctor, {
+      provider: new FactoryProvider(factory),
+      options: options ?? { lifecycle: Lifecycle.transient }
+    });
 
     return this;
   }
@@ -98,8 +147,11 @@ class InternalContainer extends Container implements InternalResolver {
     this.throwIfDisposed();
 
     if (maybeInstance) {
-      this.registry.register(ctor, new InstanceProvider(maybeInstance), {
-        lifecycle: Lifecycle.singleton
+      this.registrations.set(ctor, {
+        provider: new InstanceProvider(maybeInstance),
+        options: {
+          lifecycle: Lifecycle.singleton
+        }
       });
 
       return this;
@@ -120,24 +172,20 @@ class InternalContainer extends Container implements InternalResolver {
   ): T {
     this.throwIfDisposed();
 
-    const constructor = this.registry.getConstructor(token);
+    const constructor = this.getConstructor(token);
 
-    const context = contextIn.withAppend(constructor);
+    const context = contextIn.withAppendToChain(constructor);
 
     const lifecycle =
-      this.registry.getRegistration(constructor)?.[1].lifecycle ??
+      this.getRegistration(constructor)?.options.lifecycle ??
       Lifecycle.transient;
 
-    return this.lifecycles.getLifecycle(lifecycle).provide(token, context);
+    return this.lifecycles[lifecycle].provide(token, context);
   }
 
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.throwIfDisposed();
-
-    this._disposed = true;
-
+  async dispose(): Promise<void> {
     await Promise.all([
-      this.lifecycles[Symbol.asyncDispose](),
+      ...Object.values(this.lifecycles).map(l => l[Symbol.asyncDispose]()),
 
       ...[...this.childContainers.values()].map(ref =>
         ref.deref()?.[Symbol.asyncDispose]()

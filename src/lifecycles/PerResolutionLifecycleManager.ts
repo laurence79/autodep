@@ -1,39 +1,28 @@
-import Registry from '../Registry';
 import ResolutionContext from '../ResolutionContext';
+import DisposableOnce from '../common/DisposableOnce';
 import tryDisposeItem from '../helpers/tryDisposeItem';
-import ConstructProvider from '../providers/ConstructProvider';
 import { Constructor } from '../types/Constructor';
+import { InternalResolver } from '../types/InternalResolver';
+import { Registry } from '../types/Registry';
 import { Token } from '../types/Token';
 import { LifecycleManager } from './LifecycleManager';
 
 class PerResolutionLifecycleManager
+  extends DisposableOnce
   implements LifecycleManager, AsyncDisposable
 {
-  public static readonly alias = 'perResolution';
-
-  constructor(private readonly registry: Registry) {}
+  constructor(
+    private readonly registry: Registry,
+    private readonly resolver: InternalResolver
+  ) {
+    super();
+  }
 
   private readonly caches = new WeakMap<object, Map<Constructor, unknown>>();
 
   private readonly instances = new Map<Constructor, WeakRef<object>>();
 
-  private _disposed = false;
-
-  public get disposed() {
-    return this._disposed;
-  }
-
-  private throwIfDisposed() {
-    if (this._disposed) {
-      throw new Error('Can not use a disposed lifecycle.');
-    }
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    this.throwIfDisposed();
-
-    this._disposed = true;
-
+  async dispose(): Promise<void> {
     await Promise.all([...this.instances.values()].map(tryDisposeItem));
 
     this.instances.clear();
@@ -63,11 +52,7 @@ class PerResolutionLifecycleManager
       return cache.get(constructor) as T;
     }
 
-    const provider =
-      this.registry.getRegistration(constructor)?.[0] ??
-      new ConstructProvider(constructor);
-
-    const instance = provider.provide(context);
+    const instance = this.resolver.construct(constructor, context);
 
     cache.set(constructor, instance);
 
