@@ -1,3 +1,10 @@
+# [1.0.0-beta.12](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-01)
+
+
+### Bug Fixes
+
+* Internal container should implement container ([b76066b](https://github.com/laurence79/ts-ioc/commit/b76066b00262b1f920a1b55ee1282dbc91b6aedc))
+
 # [1.0.0-beta.11](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2024-04-26)
 
 
