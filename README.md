@@ -148,6 +148,6 @@ const instance = new DisposableThing();
 ## Some compromises
 As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control.
 
-It is not possible to use interfaces at runtime.
+It is not possible to use interfaces at runtime, but abstract classes can be used as an alternative in most cases.
 
 In order for `ts-ioc` to be able to infer the dependencies in a constructor, the class needs to be decorated with the `@injectable()` decorator from this package.
