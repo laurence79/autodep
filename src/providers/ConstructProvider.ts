@@ -1,7 +1,7 @@
-import { Provider } from '../types/Provider';
-import { Constructor } from '../types/Constructor';
-import ResolutionContext from '../ResolutionContext';
-import { Token } from '../types/Token';
+import type ResolutionContext from '../ResolutionContext';
+import type { Constructor } from '../types/Constructor';
+import type { Provider } from '../types/Provider';
+import type { Token } from '../types/Token';
 
 class ConstructProvider<T> implements Provider<T> {
   constructor(private readonly ctor: Constructor<T>) {}

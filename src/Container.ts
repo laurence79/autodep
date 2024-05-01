@@ -1,11 +1,11 @@
-import { FactoryFn } from './providers/FactoryProvider';
-import { Token } from './types/Token';
-import {
+import type { FactoryFn } from './providers/FactoryProvider';
+import type { Constructor } from './types/Constructor';
+import type {
   RegistrationOptions,
   SingletonRegistrationOptions
 } from './types/RegistrationOptions';
-import { Constructor } from './types/Constructor';
-import { Resolver } from './types/Resolver';
+import type { Resolver } from './types/Resolver';
+import type { Token } from './types/Token';
 
 abstract class Container implements Resolver, AsyncDisposable {
   /**

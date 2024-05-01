@@ -1,4 +1,5 @@
-import { Constructor } from '../types/Constructor';
+import type { Constructor } from '../types/Constructor';
+
 import DisposableLifecycleManager from './DisposableLifecycleManager';
 
 class WeakLifecycleManager extends DisposableLifecycleManager {

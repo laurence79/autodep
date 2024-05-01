@@ -1,4 +1,4 @@
-import { Lifecycle } from '../lifecycles/Lifecycle';
+import type { Lifecycle } from '../lifecycles/Lifecycle';
 
 /**
  * Options affecting the registration and resolution of a type.

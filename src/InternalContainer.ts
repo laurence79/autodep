@@ -1,24 +1,24 @@
 import DisposableOnce from './common/DisposableOnce';
-import { Constructor } from './types/Constructor';
-import { InternalResolver } from './types/InternalResolver';
-import {
+import Container from './Container';
+import { Lifecycle } from './lifecycles/Lifecycle';
+import PerContainerLifecycleManager from './lifecycles/PerContainerLifecycleManager';
+import PerResolutionLifecycleManager from './lifecycles/PerResolutionLifecycleManager';
+import SingletonLifecycleManager from './lifecycles/SingletonLifecycleManager';
+import TransientLifecycleManager from './lifecycles/TransientLifecycleManager';
+import ConstructProvider from './providers/ConstructProvider';
+import FactoryProvider, { type FactoryFn } from './providers/FactoryProvider';
+import ResolutionContext from './ResolutionContext';
+import type { Constructor } from './types/Constructor';
+import isConstructor from './types/guards/isConstructor';
+import isRegistrationOptions from './types/guards/isRegistrationOptions';
+import type { InternalResolver } from './types/InternalResolver';
+import type { Registration } from './types/Registration';
+import type {
   RegistrationOptions,
   SingletonRegistrationOptions
 } from './types/RegistrationOptions';
-import { Registry } from './types/Registry';
-import { Token } from './types/Token';
-import ResolutionContext from './ResolutionContext';
-import ConstructProvider from './providers/ConstructProvider';
-import FactoryProvider, { FactoryFn } from './providers/FactoryProvider';
-import Container from './Container';
-import { Lifecycle } from './lifecycles/Lifecycle';
-import isConstructor from './types/guards/isConstructor';
-import SingletonLifecycleManager from './lifecycles/SingletonLifecycleManager';
-import PerContainerLifecycleManager from './lifecycles/PerContainerLifecycleManager';
-import PerResolutionLifecycleManager from './lifecycles/PerResolutionLifecycleManager';
-import TransientLifecycleManager from './lifecycles/TransientLifecycleManager';
-import { Registration } from './types/Registration';
-import isRegistrationOptions from './types/guards/isRegistrationOptions';
+import type { Registry } from './types/Registry';
+import type { Token } from './types/Token';
 
 class InternalContainer
   extends DisposableOnce

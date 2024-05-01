@@ -1,4 +1,4 @@
-import { RegistrationOptions } from '../RegistrationOptions';
+import type { RegistrationOptions } from '../RegistrationOptions';
 
 const isRegistrationOptions = <T>(
   obj: unknown

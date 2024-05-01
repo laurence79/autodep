@@ -1,8 +1,9 @@
-import ResolutionContext from '../ResolutionContext';
-import { InternalResolver } from '../types/InternalResolver';
-import { Registry } from '../types/Registry';
-import { Token } from '../types/Token';
+import type ResolutionContext from '../ResolutionContext';
 import { isDisposable } from '../types/guards/isDisposable';
+import type { InternalResolver } from '../types/InternalResolver';
+import type { Registry } from '../types/Registry';
+import type { Token } from '../types/Token';
+
 import StrongLifecycleManager from './StrongLifecycleManager';
 
 class PerContainerLifecycleManager extends StrongLifecycleManager {

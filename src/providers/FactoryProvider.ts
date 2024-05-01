@@ -1,7 +1,7 @@
-import ResolutionContext from '../ResolutionContext';
-import { Constructor } from '../types/Constructor';
-import { Provider } from '../types/Provider';
-import { Resolver } from '../types/Resolver';
+import type ResolutionContext from '../ResolutionContext';
+import type { Constructor } from '../types/Constructor';
+import type { Provider } from '../types/Provider';
+import type { Resolver } from '../types/Resolver';
 
 export type FactoryFn<T> = (
   resolver: Resolver,

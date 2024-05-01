@@ -1,5 +1,5 @@
-import { Provider } from './Provider';
-import { RegistrationOptions } from './RegistrationOptions';
+import type { Provider } from './Provider';
+import type { RegistrationOptions } from './RegistrationOptions';
 
 export interface Registration<T = unknown> {
   readonly provider?: Provider<T>;

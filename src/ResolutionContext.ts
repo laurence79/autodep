@@ -1,5 +1,5 @@
-import { Constructor } from './types/Constructor';
-import { InternalResolver } from './types/InternalResolver';
+import type { Constructor } from './types/Constructor';
+import type { InternalResolver } from './types/InternalResolver';
 
 class ResolutionContext {
   constructor(
