@@ -22,7 +22,7 @@ import isRegistrationOptions from './types/guards/isRegistrationOptions';
 
 class InternalContainer
   extends DisposableOnce
-  implements InternalResolver, Registry
+  implements Container, InternalResolver, Registry
 {
   constructor(public readonly parent?: InternalContainer) {
     super();
