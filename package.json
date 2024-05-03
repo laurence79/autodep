@@ -1,5 +1,5 @@
 {
-  "name": "@laurence79/ts-ioc",
+  "name": "@autodep/container",
   "version": "1.0.0-beta.13",
   "private": false,
   "publishConfig": {
@@ -10,13 +10,13 @@
     "Typescipt",
     "ioc"
   ],
-  "homepage": "https://github.com/laurence79/ts-ioc#readme",
+  "homepage": "https://github.com/laurence79/autodep#readme",
   "bugs": {
-    "url": "https://github.com/laurence79/ts-ioc/issues"
+    "url": "https://github.com/laurence79/autodep/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/laurence79/ts-ioc.git"
+    "url": "git+https://github.com/laurence79/autodep.git"
   },
   "license": "ISC",
   "author": "Laurence Hartgill",

@@ -1,4 +1,4 @@
-# ts-ioc
+# Autodep
 
 An opinionated Inversion-of-Control container for typescript.
 
@@ -6,7 +6,9 @@ Heavily inspired by Microsoft's [tsyringe](https://github.com/microsoft/tsyringe
 
 **Key features**
 - Supports abstract base classes as an alternative to interfaces.
+
 - Supports the modern `Symbol.disposable` (and `Symbol.asyncDisposable`) approach to disposables.
+
 - Singletons are "owned" by the container they are registered with, not the container that resolves them.
 
 
@@ -15,27 +17,24 @@ Heavily inspired by Microsoft's [tsyringe](https://github.com/microsoft/tsyringe
 ### Install
 Install using npm or yarn.
 ```sh
-npm i @laurence79/ts-ioc reflect-metadata
+npm i @autodep/container
+
+# optional, but recommended
+npm i reflect-metadata
 ```
-or
-```sh
-yarn add @laurence79/ts-ioc reflect-metadata
-```
+
+The container can work without any reflection support - you can register all of your types and their dependencies manually, but [reflect-metadata](https://github.com/rbuckton/reflect-metadata) and the `@injectable()` decorator it enables really simplify this.
 
 ### Setup
+You can use the `reflect-metadata` package to add runtime reflection capability to decorated classes.
 
-The container can work without any reflection support - you can register all of your types and their dependencies manually, but `reflect-metadata` and the `@injectable()` decorator it enables really simplifies this.
-
-#### `reflect-metadata`
-This library uses the [reflect-metadata](https://github.com/rbuckton/reflect-metadata) package to add reflection support to your javascript output, but it only does this when a class has been decorated.
-
-Be sure to import `relfect-metadata` in your entrypoint.
+1. Import `reflect-metadata` in your entrypoint.
 ```ts
 // index.ts
 
 import 'reflect-metadata'
 ```
-Add the `tsconfig.json` options that `reflect-metadata` requires.
+2. Add the `tsconfig.json` options that `reflect-metadata` requires.
 ```json
 {
   "compilerOptions": {
@@ -49,16 +48,17 @@ Add the `tsconfig.json` options that `reflect-metadata` requires.
 
 ### Create a root container
 ```ts
-import { createContainer } from '@laurence79/ts-ioc';
+import { createContainer } from '@autodep/container';
 
 const container = createContainer();
 ```
+You can have as many root containers as you like. For typical use you will most likely have a single root container, and create child containers for different scopes - a request in a REST api, or perhaps a page in a UI application.
 
-### Declare some types
+### Register some types
 #### Using the `@injectable()` decorator
-The decorator causes `reflect-metadata` to inject type information for the container to use at runtime.
+If you have installed and set up the `reflect-metadata` package, you can use the `@injectable()` decorator to inject reflection information for the container to use at runtime.
 ```ts
-import { injectable } from '@laurence79/ts-ioc';
+import { injectable } from '@autodep/container';
 
 @injectable()
 class Controller { 
@@ -70,7 +70,7 @@ class Controller {
 ```
 
 #### Using a factory
-As an alternative, you can register a factory that just uses the container to resolve the types dependencies, but you need to list them out.
+As an alternative, you can register a factory that just uses the container to resolve the type's dependencies, but you need to list them out.
 ```ts
 class Controller { 
   constructor(
@@ -93,7 +93,8 @@ class Logger {
   constructor(name: string) {}
 }
 
-container.registerFactory(Logger,
+container.registerFactory(
+  Logger,
   (_, resolutionChain) => {
     const receivingClass = resolutionChain.at(1);
     return new Logger(receivingClass?.name ?? '');
@@ -101,14 +102,14 @@ container.registerFactory(Logger,
 );
 ```
 
-### Control lifecycles
-By default, all registered (and unregistered parameterless constructor classes) will be resolved with a transient lifecycle. That is, a new instance of the class will be created every time it is resolved.
+### Lifecycles
+By default, all registered classes (and unregistered classes with a parameterless constructor) will be resolved with a transient lifecycle. That is, a new instance of the class will be created every time it is resolved.
 
-You can override this behaviour by explicitly registering the type with a specific lifecycle.
+You can override this behaviour by explicitly registering the class with a different lifecycle.
 ```ts
 class Service {}
 
-// construct a new one every time (default)
+// construct a new instance every time (default)
 container.register(Service, {
   lifecycle: Lifecycle.transient
 });
@@ -146,7 +147,7 @@ const instance = container.resolve(Controller);
 As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control, but there are some workarounds
 
 ### Abstract classes instead of interfaces
-It is not possible to use interfaces at runtime, but abstract classes can be used as an alternative in most cases.
+Interfaces do not exist at runtime, but abstract classes do. Due to the duck-typed nature of Typescript, classes can `implement` abstract classes (as if they were interfaces) and so can be used as an alternative in most cases.
 
 ```ts
 // instinct says to use an interface here, but 
@@ -169,7 +170,7 @@ container.registerAlias(Logger, ConsoleLogger);
 
 ## Disposable
 
-Containers support the [Symbol.disposable] and [Symbol.asyncDisposable] methods for handling instance disposals. See [Typescript 5.2 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
+Containers can use the `Symbol.disposable` and `Symbol.asyncDisposable` methods for handling instance disposals. See [Typescript 5.2 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html) for more details on using this approach.
 ```ts
 class Foo {
   [Symbol.disposable]() {
@@ -200,7 +201,7 @@ const instance = new DisposableThing();
 
 ## Garbage collection
 
-Lifecycles either retain a _strong_ or _weak_ reference to instances of types they create.
+Lifecycles either retain a _strong_ or _weak_ reference to instances they create.
 
 **A strong reference** - will keep the object alive until the container is disposed, or goes out of scope.
 
