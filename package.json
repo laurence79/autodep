@@ -7,8 +7,9 @@
   },
   "description": "An opinionated Inversion of Control container for Typescript",
   "keywords": [
-    "Typescipt",
-    "ioc"
+    "typescript",
+    "ioc",
+    "dependency injection"
   ],
   "homepage": "https://github.com/laurence79/autodep#readme",
   "bugs": {
@@ -63,8 +64,10 @@
     "typescript": "^5.2.0"
   },
   "peerDependencies": {
-    "reflect-metadata": "^0.1.13",
     "tslib": "^2.1.0"
+  },
+  "optionalDependencies": {
+    "reflect-metadata": "^0.1.13"
   },
   "engines": {
     "node": ">=16"

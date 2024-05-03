@@ -1,6 +1,6 @@
 # Autodep
 
-An opinionated Inversion-of-Control container for typescript.
+An opinionated dependency injection container for typescript.
 
 Heavily inspired by Microsoft's [tsyringe](https://github.com/microsoft/tsyringe) and [unity](https://github.com/unitycontainer/unity). But with some different choices.
 
@@ -10,6 +10,17 @@ Heavily inspired by Microsoft's [tsyringe](https://github.com/microsoft/tsyringe
 - Supports the modern `Symbol.disposable` (and `Symbol.asyncDisposable`) approach to disposables.
 
 - Singletons are "owned" by the container they are registered with, not the container that resolves them.
+
+
+## Background
+
+Most automated dependency injection frameworks use a reflection-based approach to discover dependencies. This can be a challenge with Typescript because type data isn't available at runtime. But there are some workarounds
+
+### reflect-metadata [package](https://github.com/rbuckton/reflect-metadata)
+This package emits type information for class constructors as javascript objects, as long as the class has a decorator. Autodep can optionally use this to infer constructor parameters and their types.
+
+### Abstract classes instead of interfaces
+You will notice that none of the examples use interfaces. This is because they do not exist at runtime, but abstract classes do. Due to the duck-typed nature of Typescript (and Javascript), classes can `implement` abstract classes (as if they were interfaces) and so can be used as an alternative to interfaces in most cases.
 
 
 ## Getting started
@@ -23,15 +34,14 @@ npm i @autodep/container
 npm i reflect-metadata
 ```
 
-The container can work without any reflection support - you can register all of your types and their dependencies manually, but [reflect-metadata](https://github.com/rbuckton/reflect-metadata) and the `@injectable()` decorator it enables really simplify this.
+The container can work without any reflection support - you can register all of your types and their dependencies manually, but [reflect-metadata](https://github.com/rbuckton/reflect-metadata) and the `@injectable()` decorator that is part of this package really simplify this.
 
 ### Setup
-You can use the `reflect-metadata` package to add runtime reflection capability to decorated classes.
+If you are using the `reflect-metadata` package to add runtime reflection capability to decorated classes.
 
 1. Import `reflect-metadata` in your entrypoint.
 ```ts
 // index.ts
-
 import 'reflect-metadata'
 ```
 2. Add the `tsconfig.json` options that `reflect-metadata` requires.
@@ -44,19 +54,35 @@ import 'reflect-metadata'
 }
 ```
 
-## Using the container
 
-### Create a root container
+## Using the container
 ```ts
 import { createContainer } from '@autodep/container';
 
 const container = createContainer();
 ```
-You can have as many root containers as you like. For typical use you will most likely have a single root container, and create child containers for different scopes - a request in a REST api, or perhaps a page in a UI application.
+You can have as many containers as you like. For typical use you will most likely have a single root container, and create child containers for different scopes - a request in a REST api, or perhaps a page in a UI application.
 
-### Register some types
+
+### Registering classes
+
+Registration of classes without dependencies is optional, unless you want to control the lifecycle (see below).
+```ts
+class SimpleService {}
+
+// parameterless constructor, no need to register
+const instance = container.resolve(SimpleService);
+```
+
+
+### Registering classes with dependencies
+
+The container needs to know what _Types_ it should supply to constructors
+
 #### Using the `@injectable()` decorator
-If you have installed and set up the `reflect-metadata` package, you can use the `@injectable()` decorator to inject reflection information for the container to use at runtime.
+If you have installed and set up the `reflect-metadata` package, you can use the `@injectable()` decorator to cause reflection information to be emitted with the javascript output for the container to use at runtime.
+
+When the container needs to construct an instance, it uses the emitted metadata to resolve instances of dependencies and supply them to the constructor
 ```ts
 import { injectable } from '@autodep/container';
 
@@ -87,7 +113,7 @@ container.registerFactory(
   )
 );
 ```
-Using a factory does unlock some more advanced use cases, such as using information about where the dependency is going to be used
+Using a factory does unlock some more advanced use cases, such as using information about where the dependency is going to be injected
 ```ts
 class Logger {
   constructor(name: string) {}
@@ -101,13 +127,33 @@ container.registerFactory(
   }
 );
 ```
+#### Using an alias
+An alias instructs the container to return a more derived class in place of a base class.
+```ts
+abstract class ConfigProvider {
+  abstract readonly connectionString: string;
+}
+
+class EnvConfigProvider implements ConfigProvider {
+  get connectionString() {
+    return process.env.CONNECTION_STRING;
+  }
+}
+
+container.registerAlias(ConfigProvider, EnvConfigProvider);
+```
+Any class with a `ConfigProvider` dependency will be injected with the `EnvConfigProvider` concrete class.
+
 
 ### Lifecycles
-By default, all registered classes (and unregistered classes with a parameterless constructor) will be resolved with a transient lifecycle. That is, a new instance of the class will be created every time it is resolved.
+By default, all classes will be resolved with a transient lifecycle. That is, a new instance of the class will be created every time it is resolved.
 
 You can override this behaviour by explicitly registering the class with a different lifecycle.
 ```ts
-class Service {}
+@injectable()
+class Service {
+  constructor(config: ConfigProvider) {}
+}
 
 // construct a new instance every time (default)
 container.register(Service, {
@@ -135,6 +181,10 @@ container.registerSingleton(Service);
 ```
 
 ### Automatically inject dependencies
+The container will be able to automatically create instances, and instances of its dependencies from
+- Classes with a parameterless constructor
+- Classes with a registered factory
+- Classes decorated with `injectable()`
 
 ```ts
 // will create an instance of Controller and also
@@ -142,31 +192,6 @@ container.registerSingleton(Service);
 const instance = container.resolve(Controller);
 ```
 
-
-## Some compromises
-As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control, but there are some workarounds
-
-### Abstract classes instead of interfaces
-Interfaces do not exist at runtime, but abstract classes do. Due to the duck-typed nature of Typescript, classes can `implement` abstract classes (as if they were interfaces) and so can be used as an alternative in most cases.
-
-```ts
-// instinct says to use an interface here, but 
-// interfaces are lost at runtime
-abstract class Logger {
-  abstract log(message: string);
-}
-
-// note the implements, not extends
-class ConsoleLogger implements Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
-
-// this method checks that ConsoleLogger is a 
-// suitable implementation of Logger
-container.registerAlias(Logger, ConsoleLogger);
-```
 
 ## Disposable
 
@@ -199,7 +224,7 @@ const instance = new DisposableThing();
 // instance is not disposed
 ```
 
-## Garbage collection
+## References and Garbage collection
 
 Lifecycles either retain a _strong_ or _weak_ reference to instances they create.
 
