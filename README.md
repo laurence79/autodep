@@ -16,6 +16,7 @@ or
 ```sh
 yarn add @laurence79/ts-ioc reflect-metadata
 ```
+
 ### Setup
 Be sure to import `relfect-metadata` in your entrypoint.
 
@@ -25,10 +26,8 @@ This library uses the [reflect-metadata](https://github.com/rbuckton/reflect-met
 
 import 'reflect-metadata'
 ```
-Add the `emitDecoratorMetadata` and `experimentalDecorators` typescript config options to support `reflect-metadata`
+Add the `tsconfig.json` options that `reflect-metadata` requires.
 ```json
-// tsconfig.json
-
 {
   "compilerOptions": {
     "emitDecoratorMetadata": true,
@@ -36,8 +35,6 @@ Add the `emitDecoratorMetadata` and `experimentalDecorators` typescript config o
   }
 }
 ```
-
-
 
 ## Using the container
 
@@ -48,28 +45,12 @@ import { createContainer } from '@laurence79/ts-ioc';
 const container = createContainer();
 ```
 
-### Register a type
-```ts
-class Logger {}
-class Service {}
-
-// this is optional, unless you want to control the 
-// object's lifetime. The container will by default 
-// create transient instances for the dependencies of
-// any class decorated with injectable()
-container.register(Logger);
-
-// only one of these will be created by this container
-// or any of it's children
-container.registerSingleton(Service);
-```
-
-### Automatically inject constructor dependencies.
-
-**NOTE** the `injectable()` decorator to enable ts-ioc to reflect on the constructor of `Controller`
+### Declare some types
 ```ts
 import { injectable } from '@laurence79/ts-ioc';
 
+// this decorator is required so ts-ioc can reflect
+// upon the constructor of the class
 @injectable()
 class Controller { 
   constructor(
@@ -77,8 +58,99 @@ class Controller {
     private service: Service
   ) {}
 }
+```
 
+### Control object instantiation
+```ts
+// we don't need the injectable decorator here
+// because we will tell the container how to create
+// these
+class Logger {
+  constructor(name: string) {}
+}
+
+container.registerFactory(Logger,
+  (container, context) => {
+    const receivingClass = context.at(1);
+    return new Logger(receivingClass?.name ?? '');
+  }
+);
+```
+
+### Control lifecycles
+```ts
+// classes with an empty constructor don't need
+// the injectable decorator
+class Service {}
+
+// only one of these will be created by this 
+// container, or any of it's children
+container.registerSingleton(Service);
+```
+
+### Automatically inject dependencies
+
+```ts
+// will create an instance of Controller and also
+// instances of Logger and Service that it needs
 const instance = container.resolve(Controller);
+```
+
+## Disposable
+
+Containers support the [Symbol.disposable] and [Symbol.asyncDisposable] methods for handling instance disposals. See [Typescript 5.2 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
+```ts
+class Foo {
+  [Symbol.disposable]() {
+    console.log('Bye now!');
+  }
+}
+
+const container = createContainer();
+
+{
+  using child = container.createChild();
+  const instance = container.resolve(Foo);
+}
+
+// Bye now!
+```
+**NOTE** Containers will only dispose of objects they create, i.e. not ones where you provide the instance
+```ts
+const instance = new DisposableThing();
+
+{
+  await using container = createContainer();
+  container.registerSingleton(instance);
+}
+
+// instance is not disposed
+```
+
+
+## Some compromises
+As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control, but there are some workarounds
+
+### Abstract classes instead of interfaces
+It is not possible to use interfaces at runtime, but abstract classes can be used as an alternative in most cases.
+
+```ts
+// instinct says to use an interface here, but 
+// interfaces are lost at runtime
+abstract class Logger {
+  abstract log(message: string);
+}
+
+// note the implements, not extends
+class ConsoleLogger implements Logger {
+  log(message: string) {
+    console.log(message);
+  }
+}
+
+// this method checks that ConsoleLogger is a 
+// suitable implementation of Logger
+container.registerAlias(Logger, ConsoleLogger);
 ```
 
 ## Object lifecycles
@@ -112,42 +184,3 @@ container.register(Class, { lifecycle: Lifecycle.singleton });
 | Per container       | A maximum of one object of the type will be created in the container. Child containers will have their own object of the type.  The container will hold a strong reference to the object, which if disposable will be disposed along with the container.          | Strong    |
 | Singleton           | A maximum of one object of the type will be created in the container. Child containers will also resolve to this object.  The container will hold a strong reference to the object, which if disposable will be disposed along with the container.                | Strong    |
 
-
-## Disposable
-
-Containers support the new [Symbol.disposable] and [Symbol.asyncDisposable] method for doing disposals. See [Typescript 5.2 release notes](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
-```ts
-class Foo {
-  [Symbol.disposable]() {
-    console.log('Bye now!');
-  }
-}
-
-const container = createContainer();
-
-{
-  using child = container.createChild();
-  const instance = container.resolve(Foo);
-}
-
-// Bye now!
-```
-**NOTE** Containers will only dispose of objects they create, i.e. not ones where you provide the instance
-```ts
-const instance = new DisposableThing();
-
-{
-  await using container = createContainer();
-  container.registerSingleton(instance);
-}
-
-// instance is not disposed
-```
-
-
-## Some compromises
-As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control.
-
-It is not possible to use interfaces at runtime, but abstract classes can be used as an alternative in most cases.
-
-In order for `ts-ioc` to be able to infer the dependencies in a constructor, the class needs to be decorated with the `@injectable()` decorator from this package.
