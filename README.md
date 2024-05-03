@@ -1,8 +1,13 @@
 # ts-ioc
 
-An opinionated Inversion of Control container for typescript.
+An opinionated Inversion-of-Control container for typescript.
 
 Heavily inspired by Microsoft's [tsyringe](https://github.com/microsoft/tsyringe) and [unity](https://github.com/unitycontainer/unity). But with some different choices.
+
+**Key features**
+- Supports abstract base classes as an alternative to interfaces.
+- Supports the modern `Symbol.disposable` (and `Symbol.asyncDisposable`) approach to disposables.
+- Singletons are "owned" by the container they are registered with, not the container that resolves them.
 
 
 ## Getting started
@@ -18,9 +23,13 @@ yarn add @laurence79/ts-ioc reflect-metadata
 ```
 
 ### Setup
-Be sure to import `relfect-metadata` in your entrypoint.
 
+The container can work without any reflection support - you can register all of your types and their dependencies manually, but `reflect-metadata` and the `@injectable()` decorator it enables really simplifies this.
+
+#### `reflect-metadata`
 This library uses the [reflect-metadata](https://github.com/rbuckton/reflect-metadata) package to add reflection support to your javascript output, but it only does this when a class has been decorated.
+
+Be sure to import `relfect-metadata` in your entrypoint.
 ```ts
 // index.ts
 
@@ -46,11 +55,11 @@ const container = createContainer();
 ```
 
 ### Declare some types
+#### Using the `@injectable()` decorator
+The decorator causes `reflect-metadata` to inject type information for the container to use at runtime.
 ```ts
 import { injectable } from '@laurence79/ts-ioc';
 
-// this decorator is required so ts-ioc can reflect
-// upon the constructor of the class
 @injectable()
 class Controller { 
   constructor(
@@ -60,31 +69,67 @@ class Controller {
 }
 ```
 
-### Control object instantiation
+#### Using a factory
+As an alternative, you can register a factory that just uses the container to resolve the types dependencies, but you need to list them out.
 ```ts
-// we don't need the injectable decorator here
-// because we will tell the container how to create
-// these
+class Controller { 
+  constructor(
+    private logger: Logger,
+    private service: Service
+  ) {}
+}
+
+container.registerFactory(
+  Controller,
+  (c) => new Controller(
+    c.resolve(Logger),
+    c.resolve(Service)
+  )
+);
+```
+Using a factory does unlock some more advanced use cases, such as using information about where the dependency is going to be used
+```ts
 class Logger {
   constructor(name: string) {}
 }
 
 container.registerFactory(Logger,
-  (container, context) => {
-    const receivingClass = context.at(1);
+  (_, resolutionChain) => {
+    const receivingClass = resolutionChain.at(1);
     return new Logger(receivingClass?.name ?? '');
   }
 );
 ```
 
 ### Control lifecycles
+By default, all registered (and unregistered parameterless constructor classes) will be resolved with a transient lifecycle. That is, a new instance of the class will be created every time it is resolved.
+
+You can override this behaviour by explicitly registering the type with a specific lifecycle.
 ```ts
-// classes with an empty constructor don't need
-// the injectable decorator
 class Service {}
 
-// only one of these will be created by this 
-// container, or any of it's children
+// construct a new one every time (default)
+container.register(Service, {
+  lifecycle: Lifecycle.transient
+});
+
+// construct at most one new instance for each
+// resolution
+container.register(Service, {
+  lifecycle: Lifecycle.perResolution
+});
+
+// construct at most one instance for each container
+container.register(Service, {
+  lifecycle: Lifecycle.perContainer
+});
+
+// at most one instance for this container and all
+// of its children
+container.register(Service, {
+  lifecycle: Lifecycle.singleton
+});
+// or use this convenience method
 container.registerSingleton(Service);
 ```
 
@@ -94,6 +139,32 @@ container.registerSingleton(Service);
 // will create an instance of Controller and also
 // instances of Logger and Service that it needs
 const instance = container.resolve(Controller);
+```
+
+
+## Some compromises
+As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control, but there are some workarounds
+
+### Abstract classes instead of interfaces
+It is not possible to use interfaces at runtime, but abstract classes can be used as an alternative in most cases.
+
+```ts
+// instinct says to use an interface here, but 
+// interfaces are lost at runtime
+abstract class Logger {
+  abstract log(message: string);
+}
+
+// note the implements, not extends
+class ConsoleLogger implements Logger {
+  log(message: string) {
+    console.log(message);
+  }
+}
+
+// this method checks that ConsoleLogger is a 
+// suitable implementation of Logger
+container.registerAlias(Logger, ConsoleLogger);
 ```
 
 ## Disposable
@@ -127,60 +198,20 @@ const instance = new DisposableThing();
 // instance is not disposed
 ```
 
+## Garbage collection
 
-## Some compromises
-As typescript does not emit any type data in it's output, it can be difficult to use reflection type approaches to do automated inversion of control, but there are some workarounds
+Lifecycles either retain a _strong_ or _weak_ reference to instances of types they create.
 
-### Abstract classes instead of interfaces
-It is not possible to use interfaces at runtime, but abstract classes can be used as an alternative in most cases.
+**A strong reference** - will keep the object alive until the container is disposed, or goes out of scope.
 
-```ts
-// instinct says to use an interface here, but 
-// interfaces are lost at runtime
-abstract class Logger {
-  abstract log(message: string);
-}
+**A weak reference** - will allow the object to be garbage collected if there is no other reference to it in your code. If the object are still alive when the container is disposed (or itself goes out of scope) they will be disposed too.
 
-// note the implements, not extends
-class ConsoleLogger implements Logger {
-  log(message: string) {
-    console.log(message);
-  }
-}
 
-// this method checks that ConsoleLogger is a 
-// suitable implementation of Logger
-container.registerAlias(Logger, ConsoleLogger);
-```
-
-## Object lifecycles
-
-When registering a type with the container, you can specify whether it should retain a _strong_ or _weak_ reference to instances of the type it creates, and how many of each type it should create.
-
-### Strong references
-Will keep the object alive until the container is disposed.
-
-### Weak references
-Will allow the objects to be garbage collected if there is no other reference to them in your code. If the objects are still alive when the container is disposed they will be disposed too.
-
-```ts
-// a new one every time
-container.register(Class, { lifecycle: Lifecycle.transient });
-
-// at most one new instance for each resolution
-container.register(Class, { lifecycle: Lifecycle.perResolution });
-
-// at most one new instance for each container
-container.register(Class, { lifecycle: Lifecycle.perContainer });
-
-// at most one instance for this container and all of it's children
-container.register(Class, { lifecycle: Lifecycle.singleton });
-```
-
-| Name                | Description                                                                                                                                                                                                                                                       | Reference |
+| Lifecycle           | Description                                                                                                                                                                                                                                                       | Reference |
 |---------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------|
 | Transient (default) | A new object should be constructed for the type for each dependency.  The container will hold a weak reference to the object, which if disposable will be disposed along with the container if it hasn't already been garbage collected.                          | Weak      |
 | Per resolution      | During a resolution, a maximum of one object of the type will be created for each dependency.  The container will hold a weak reference to the object, which if disposable will be disposed along with the container if it hasn't already been garbage collected. | Weak      |
 | Per container       | A maximum of one object of the type will be created in the container. Child containers will have their own object of the type.  The container will hold a strong reference to the object, which if disposable will be disposed along with the container.          | Strong    |
 | Singleton           | A maximum of one object of the type will be created in the container. Child containers will also resolve to this object.  The container will hold a strong reference to the object, which if disposable will be disposed along with the container.                | Strong    |
 
+Containers hold weak references to their child containers, that is, those created with `createChildContainer()`.
