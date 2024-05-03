@@ -1,3 +1,10 @@
+# [1.0.0-beta.13](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-03)
+
+
+### Bug Fixes
+
+* Registration options type too loose ([e6b11e8](https://github.com/laurence79/ts-ioc/commit/e6b11e804d14c2362afb781a6155f27f49a63f01))
+
 # [1.0.0-beta.12](https://github.com/laurence79/ts-ioc/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2024-05-01)
 
 
