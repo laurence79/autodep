@@ -1,3 +1,10 @@
+# [1.0.0-beta.14](https://github.com/laurence79/autodep/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2024-05-03)
+
+
+### Features
+
+* Rename ([2a65427](https://github.com/laurence79/autodep/commit/2a654277055106daa2d6432f6e4dd6d888d5bccb))
+
 # [1.0.0-beta.13](https://github.com/laurence79/autodep/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2024-05-03)
 
 
