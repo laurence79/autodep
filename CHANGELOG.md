@@ -1,3 +1,12 @@
+# [1.0.0-beta.15](https://github.com/laurence79/autodep/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2024-05-04)
+
+
+### Bug Fixes
+
+* Clean up usage without reflect-metadata ([4a27d05](https://github.com/laurence79/autodep/commit/4a27d0500defc39920e04b44f0a532993270b542))
+* Don't import reflect metadata - consumer should do that ([d83d875](https://github.com/laurence79/autodep/commit/d83d875af01cd3f2fa12edb04f15d28e872ac5d5))
+* Missed npm install ([9eb33d1](https://github.com/laurence79/autodep/commit/9eb33d1a8b0f06f421387ff1000f67deb85c41e3))
+
 # [1.0.0-beta.14](https://github.com/laurence79/autodep/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2024-05-03)
 
 
