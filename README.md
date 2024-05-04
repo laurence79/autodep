@@ -224,6 +224,18 @@ const instance = new DisposableThing();
 // instance is not disposed
 ```
 
+### Polyfill
+Your environment might need a Polyfill to support `Symbol.disposable` and `Symbol.asyncDisposable`.
+```ts
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+Symbol.dispose ??= Symbol('Symbol.dispose');
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+Symbol.asyncDispose ??= Symbol('Symbol.asyncDispose');
+```
+
 ## References and Garbage collection
 
 Lifecycles either retain a _strong_ or _weak_ reference to instances they create.
@@ -241,3 +253,4 @@ Lifecycles either retain a _strong_ or _weak_ reference to instances they create
 | Singleton           | A maximum of one object of the type will be created in the container. Child containers will also resolve to this object.  The container will hold a strong reference to the object, which if disposable will be disposed along with the container.                | Strong    |
 
 Containers hold weak references to their child containers, that is, those created with `createChildContainer()`.
+
