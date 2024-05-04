@@ -26,25 +26,19 @@ You will notice that none of the examples use interfaces. This is because they d
 ## Getting started
 
 ### Install
-Install using npm or yarn.
+Install using npm
 ```sh
 npm i @autodep/container
-
-# optional, but recommended
-npm i reflect-metadata
+```
+or yarn
+```sh
+yarn add @autodep/container
 ```
 
 The container can work without any reflection support - you can register all of your types and their dependencies manually, but [reflect-metadata](https://github.com/rbuckton/reflect-metadata) and the `@injectable()` decorator that is part of this package really simplify this.
 
 ### Setup
-If you are using the `reflect-metadata` package to add runtime reflection capability to decorated classes.
-
-1. Import `reflect-metadata` in your entrypoint.
-```ts
-// index.ts
-import 'reflect-metadata'
-```
-2. Add the `tsconfig.json` options that `reflect-metadata` requires.
+If you are going to use the `@injectable()` decorator, add the `tsconfig.json` options that `reflect-metadata` requires.
 ```json
 {
   "compilerOptions": {
@@ -80,7 +74,7 @@ const instance = container.resolve(SimpleService);
 The container needs to know what _Types_ it should supply to constructors
 
 #### Using the `@injectable()` decorator
-If you have installed and set up the `reflect-metadata` package, you can use the `@injectable()` decorator to cause reflection information to be emitted with the javascript output for the container to use at runtime.
+If you have installed and set up the `reflect-metadata` package, you can use the `@injectable()` decorator to emit reflection information with the javascript output for the container to use at runtime.
 
 When the container needs to construct an instance, it uses the emitted metadata to resolve instances of dependencies and supply them to the constructor
 ```ts

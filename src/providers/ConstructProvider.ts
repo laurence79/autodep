@@ -6,11 +6,13 @@ import type { Token } from '../types/Token';
 class ConstructProvider<T> implements Provider<T> {
   constructor(private readonly ctor: Constructor<T>) {}
 
-  private readonly params =
-    (Reflect.getMetadata('design:paramtypes', this.ctor) as unknown[]) || [];
+  private readonly reflectParams =
+    ('getMetadata' in Reflect &&
+      (Reflect.getMetadata('design:paramtypes', this.ctor) as unknown[])) ||
+    [];
 
   provide(context: ResolutionContext): T {
-    if (!this.params || this.params.length === 0) {
+    if (!this.reflectParams || this.reflectParams.length === 0) {
       if (this.ctor.length === 0) {
         return new this.ctor();
       } else {
@@ -18,7 +20,7 @@ class ConstructProvider<T> implements Provider<T> {
       }
     }
 
-    const deps = this.params.map(param =>
+    const deps = this.reflectParams.map(param =>
       context.resolver.resolveWithContext(param as Token, context)
     );
 

@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 // Until native support lands in jest 30
 // https://github.com/jestjs/jest/issues/14874
 

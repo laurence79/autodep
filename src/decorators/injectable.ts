@@ -1,10 +1,12 @@
+import 'reflect-metadata';
+
 /**
  * Capture reflection metadata about a constructor
  * @returns a decorator
  */
 function injectable() {
   return function (target: object) {
-    Reflect.defineMetadata('ioc:injectable', true, target);
+    Reflect.defineMetadata('autodep:injectable', true, target);
   };
 }
 
