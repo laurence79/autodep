@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Constructor } from './Constructor';
 
-export type Token<T = any> = Constructor<T> | object;
+export type Token<T = unknown> = Constructor<T> | object;

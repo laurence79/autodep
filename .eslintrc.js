@@ -55,9 +55,6 @@ module.exports = {
         }
       },
       rules: {
-        // couchdb uses this everywhere
-        'no-underscore-dangle': 'off',
-
         '@typescript-eslint/no-unused-vars': [
           'warn',
           { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }
@@ -79,6 +76,30 @@ module.exports = {
           {
             selector: 'typeLike',
             format: ['PascalCase']
+          }
+        ],
+
+        'sort-imports': [
+          'error',
+          {
+            ignoreCase: false,
+            ignoreDeclarationSort: true,
+            ignoreMemberSort: false,
+            memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
+            allowSeparatedGroups: true
+          }
+        ],
+
+        'import/no-unresolved': 'error',
+
+        'import/order': [
+          'error',
+          {
+            'newlines-between': 'always',
+            alphabetize: {
+              order: 'asc',
+              caseInsensitive: true
+            }
           }
         ]
       },

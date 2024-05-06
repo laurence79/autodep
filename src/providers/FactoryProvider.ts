@@ -1,9 +1,12 @@
-import ResolutionContext from '../ResolutionContext';
-import { Provider } from '../types/Provider';
-import { Resolver } from '../types/Resolver';
-import { Token } from '../types/Token';
+import type ResolutionContext from '../ResolutionContext';
+import type { Constructor } from '../types/Constructor';
+import type { Provider } from '../types/Provider';
+import type { Resolver } from '../types/Resolver';
 
-export type FactoryFn<T> = (resolver: Resolver, resolutionChain: Token[]) => T;
+export type FactoryFn<T> = (
+  resolver: Resolver,
+  resolutionChain: Constructor[]
+) => T;
 
 class FactoryProvider<T> implements Provider<T> {
   constructor(private readonly fn: FactoryFn<T>) {}

@@ -4,6 +4,13 @@
     "noEmit": false,
     "sourceMap": false
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.mock.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/**/*.mock.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "**/__tests__/**/*.*"
+  ]
 }

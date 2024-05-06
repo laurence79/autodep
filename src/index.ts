@@ -1,5 +1,7 @@
-import 'reflect-metadata';
-
+export { default as createContainer } from './createContainer';
 export { default as Container } from './Container';
-export { Scope } from './Scope';
+export { Lifecycle } from './lifecycles/Lifecycle';
 export { default as injectable } from './decorators/injectable';
+
+export type { Token } from './types/Token';
+export type { Constructor } from './types/Constructor';
