@@ -48,6 +48,22 @@ If you are going to use the `@injectable()` decorator, add the `tsconfig.json` o
 }
 ```
 
+### Usage with swc
+Add these options to your `.swcrc` file
+```json
+{
+  "$schema": "https://swc.rs/schema.json",
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true
+    },
+    "transform": {
+      "decoratorMetadata": true
+    }
+  }
+}
+```
 
 ## Using the container
 ```ts
