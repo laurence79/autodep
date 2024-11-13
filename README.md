@@ -9,7 +9,7 @@ Heavily inspired by Microsoft's [tsyringe](https://github.com/microsoft/tsyringe
 
 - Supports the modern `Symbol.disposable` (and `Symbol.asyncDisposable`) approach to disposables.
 
-- Singletons are "owned" by the container they are registered with, not the container that resolves them.
+- Singletons are "owned" by the container they are registered in, not the container that first resolves them.
 
 
 ## Background
@@ -252,7 +252,7 @@ Lifecycles either retain a _strong_ or _weak_ reference to instances they create
 
 **A strong reference** - will keep the object alive until the container is disposed, or goes out of scope.
 
-**A weak reference** - will allow the object to be garbage collected if there is no other reference to it in your code. If the object are still alive when the container is disposed (or itself goes out of scope) they will be disposed too.
+**A weak reference** - will allow the object to be garbage collected if there is no other reference to it in your code. If the object is still alive when the container is disposed (or itself goes out of scope) they will be disposed too.
 
 
 | Lifecycle           | Description                                                                                                                                                                                                                                                       | Reference |
